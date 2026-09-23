@@ -28,7 +28,7 @@ Open any file directly in the browser. The only external request is Google Fonts
 
 ```
 assets/
-  css/watad.css      one stylesheet, sections numbered 1–30
+  css/watad.css      one stylesheet, sections numbered 1–31
   js/watad.js        vanilla JS, behaviour opt-in via data-attributes
   img/brand/         logo + the six identity marks (SVG)
   img/posts/         demo images (posters 9:16, covers 16:9)
@@ -70,7 +70,11 @@ One idea runs through all of it: the wedge (وتد) is driven into the axis, and
 - **عاجل (breaking news):** the headlines take turns. The current one is inked in reading direction while a sand line runs down its edge as its timer. When it hands over to the next, the sand wedge beside "عاجل" beats once. Hover or keyboard focus holds it, and it rests when it's off screen or the tab is hidden. On phones it's one slot that drops each headline in, with swipe, next and "1 من 5". Stepping through by hand stops it turning on its own.
 - **Popups** rise from below while the teal veil fades in. In the خبر وتعليق popup, next and previous cross-fade the content in place.
 - **Menu:** a teal curtain drops and the links land in order. **Search:** the overlay fades in and the field rises. Archive months open and close with their height, and a second click reverses from wherever the animation is.
-- **Article:** a sand reading-progress line runs along the top of the viewport, from the first chapter to the closing line. The contents underline the chapter in view.
+- **Article (CSS 31, JS 23–29):**
+  - **Arrival:** the title's words settle into place one after another, the epigraph's wedge is driven in, and the lead picture is lowered into its frame.
+  - **While reading:** the page axis fills with sand down to where the reader is. Each chapter's rule draws from the start edge as its wedge is planted. The thesis and the closing line ink word by word with the scroll. The figures count up and the data-band bars grow.
+  - **Tools:** the numbered citations show their source on hover or focus, and a click jumps to the source in the list, which flashes. Selecting a passage offers "quote on X" and "copy the quote" (with the title and address). The contents show the time left to read, and the head has share buttons.
+  - A sand reading-progress line also runs along the top of the viewport, and the contents underline the chapter in view.
 - **Between pages:** same-origin navigation cross-fades where the browser supports cross-document view transitions.
 - **Reduced motion:** with `prefers-reduced-motion`, nothing moves. Colour, opacity and state changes stay.
 - With JS off, everything is still visible. Nothing starts hidden unless the script has already taken charge of revealing it.
@@ -138,11 +142,17 @@ Still with the client: the designer's section artwork, the writers' cut-out phot
 | `data-arcal`, `data-year`, `data-year-grid`, `data-key="2026-09"` on `.month` | Archive by date: switches the year and marks the month from `?y=&m=` |
 | `data-archive-filter="section\|type"` + `data-value` on the archive chips | Filters the month rows by their kicker (`سياسة — تحليل`). Also reads `?section=&type=`, which is how "كل مداخل ثورة ويكي" links in. |
 | `data-wiki`, `data-wiki-year` + `data-count`, `data-wiki-search`, `data-wiki-preview`, `data-wiki-count`, `data-wiki-empty`, `data-wiki-clear` | The ثورة ويكي register. The years filter it, and the search covers every year and treats أ/إ/آ, ة/ه and ى/ي as the same letter. The row under the pointer or keyboard focus shows in the preview. |
-| `data-grow` | A block whose bars grow when it scrolls into view (the archive years at the home closing) |
+| `data-grow` | A block whose bars grow when it scrolls into view (the archive years at the home closing, the article's data band) |
+| `data-axis-fill` on an `i.axis-fill` next to the page axis | The axis fills with sand to the reading position (article) |
+| `data-count` | A figure that counts up from 0 when it comes into view. Screen readers get the final figure throughout. |
+| `data-ink` on a plain-text paragraph | Inks word by word as it is read |
+| `.cite > a[href="#src-N"]` + `li#src-N` in `.sources` | Citation with a source preview |
+| `data-time-left` | Time left to read, inside the article contents |
+| `data-share="x\|telegram"` | Share links, rebuilt from the page's address and title |
 
 ## Laravel / Blade
 
-1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=9`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
+1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=11`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
 2. **Active nav**: add `aria-current="page"` to the current section link, e.g. `@if(request()->is('politics*')) aria-current="page" @endif`.
 3. **Story component**: `<x-story :post="$post" variant="row" />` should output:
    ```html
@@ -160,6 +170,7 @@ Still with the client: the designer's section artwork, the writers' cut-out phot
 7. **خبر وتعليق**: posts are a separate type (news line, editor's comment, place, time, related article). The timeline is `news?page=`, and each post also needs its own URL (`news/{id}`) that renders the same popup content as a page for sharing and search engines.
 8. **Section artwork**: add an image field to sections (square, SVG or PNG at least 800×800). Output it inside `.secart`, falling back to the text placeholder when it's empty.
 9. **Writers**: add a `photo_cutout` (transparent PNG, portrait, at least 800×1000) and an `is_featured` / `sort` to pick the six shown on the home page.
+11. **Article**: split the title into word spans in Blade (`@foreach(explode(' ', $post->title) as $i => $w)<span class="tw" style="--i:{{ $i }}">{{ $w }}</span> @endforeach`) and keep the whole title in the `h1`'s `aria-label`. Citations come from the editor as `[1]` markers, rendered as `.cite` links to the sources list.
 10. **ثورة ويكي**: entries are numbered in the order they're added to the register (083 is the latest). The year links go to `archive.html?y=&section=ثورة ويكي`. Render the chosen year's latest entries server-side, and point the search box at a query endpoint when the register grows. Add `data-img` to a row when the entry has a poster; without one, the preview builds its index card from the row.
 
 ## Images

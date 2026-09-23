@@ -342,7 +342,7 @@
     var edge = new IntersectionObserver(land);   // near the end of the page a mark can never climb 12% up the screen
     var fold = window.innerHeight, y = window.pageYOffset, end = document.documentElement.scrollHeight;
     // every read first, then every write, so the page lays out once
-    var later = $$('.wedge,.ab-mark__art,[data-grow]').map(function (el) {
+    var later = $$('.wedge,.ab-mark__art,[data-grow],.chapter').map(function (el) {
       var r = el.getClientRects().length ? el.getBoundingClientRect() : null;
       return r && r.top >= fold ? { el: el, nearEnd: end - (r.bottom + y) < fold * 0.3 } : null;
     }).filter(Boolean);
@@ -798,8 +798,227 @@
     mark(); apply();
   }
 
+  /* 23. Article: the page axis fills with sand down to where the reader is ------
+     [data-axis-fill] sits on the axis. Its end follows the middle of the
+     screen, from the first screen to the end of the page. Scroll timelines
+     run it on the compositor; elsewhere a rAF-throttled listener does the
+     same from numbers measured once. */
+  function axisFill() {
+    var f = $('[data-axis-fill]');
+    if (!f) return;
+    var box = f.parentNode, top = 0, H = 1, vh = 1, ticking = false;
+    var timeline = window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()');
+    function draw() {
+      ticking = false;
+      var p = (window.pageYOffset + vh * 0.5 - top) / H;
+      f.style.transform = 'scaleY(' + Math.max(0, Math.min(1, p)).toFixed(4) + ')';
+    }
+    function measure() {
+      var r = box.getBoundingClientRect(), y = window.pageYOffset;
+      top = r.top + y; H = r.height || 1; vh = window.innerHeight;
+      var max = Math.max(1, document.documentElement.scrollHeight - vh);
+      var clamp = function (v) { return Math.max(0, Math.min(1, v)).toFixed(4); };
+      if (timeline) {
+        f.style.setProperty('--from', clamp((vh * 0.5 - top) / H));
+        f.style.setProperty('--to', clamp((max + vh * 0.5 - top) / H));
+      } else draw();
+    }
+    if (timeline) f.classList.add('is-timeline');
+    else window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(draw); } }, { passive: true });
+    window.addEventListener('resize', measure);
+    window.addEventListener('load', measure);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+    measure();
+  }
+
+  /* 24. Figures tally up as they come into view -----------------------------
+     [data-count] holds the final figure ("1.246", "-62"). The visible number
+     counts from 0 with the same decimals and sign; assistive tech reads the
+     final figure from a hidden copy the whole time. */
+  function counters() {
+    var els = $$('[data-count]');
+    if (!els.length || reduced.matches || !('IntersectionObserver' in window)) return;
+    function run(el) {
+      var shown = $('.count-anim', el), final = el.getAttribute('data-final'), v = parseFloat(final);
+      var dec = (final.split('.')[1] || '').length, t0 = null, D = 1400;
+      function step(t) {
+        if (t0 === null) t0 = t;
+        var k = Math.min(1, (t - t0) / D), n = v * (1 - Math.pow(1 - k, 3));
+        if (Math.abs(n) < Math.pow(10, -dec) / 2) n = 0;
+        shown.textContent = k < 1 ? n.toFixed(dec) : final;
+        if (k < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (!e.isIntersecting) return; io.unobserve(e.target); run(e.target); });
+    }, { threshold: 0.6 });
+    els.forEach(function (el) {
+      var final = el.textContent.trim(), dec = (final.split('.')[1] || '').length;
+      el.setAttribute('data-final', final);
+      el.textContent = '';
+      var a = document.createElement('span'); a.className = 'count-anim'; a.setAttribute('aria-hidden', 'true'); a.textContent = (0).toFixed(dec);
+      var r = document.createElement('span'); r.className = 'sr-only'; r.textContent = final;
+      el.appendChild(a); el.appendChild(r);
+      io.observe(el);
+    });
+  }
+
+  /* 25. Ink: the thesis and the closing line darken word by word as they are
+     read. Plain-text [data-ink] paragraphs are split into words; the scroll
+     drives them where the browser has view timelines, and they fade in turn
+     as the paragraph arrives elsewhere. */
+  function inkWords() {
+    var els = $$('[data-ink]');
+    if (!els.length || reduced.matches) return;
+    var timeline = window.CSS && CSS.supports && CSS.supports('animation-timeline: view()');
+    var io = !timeline && 'IntersectionObserver' in window ? new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -25% 0px' }) : null;
+    els.forEach(function (el) {
+      if (el.children.length) return;
+      var words = el.textContent.trim().split(/\s+/);
+      el.textContent = '';
+      words.forEach(function (w, i) {
+        var s = document.createElement('span');
+        s.className = 'iw'; s.style.setProperty('--i', i); s.textContent = w;
+        el.appendChild(s);
+        if (i < words.length - 1) el.appendChild(document.createTextNode(' '));
+      });
+      el.style.setProperty('--n', words.length);
+      if (timeline) el.classList.add('is-inked');
+      else if (io) { el.classList.add('is-inked-io'); io.observe(el); }
+    });
+  }
+
+  /* 26. Citations preview their source -----------------------------------------
+     .cite > a[href="#src-N"] shows that source in a small panel on hover or
+     keyboard focus; a click jumps to it in the sources list, which flashes
+     (CSS :target). */
+  function cites() {
+    var links = $$('.cite a[href^="#src-"]');
+    if (!links.length) return;
+    var pop = document.createElement('div'), current = null;
+    pop.className = 'cite-pop'; pop.id = 'cite-pop'; pop.hidden = true; pop.setAttribute('role', 'tooltip');
+    document.body.appendChild(pop);
+    function show(a) {
+      var src = document.getElementById(a.getAttribute('href').slice(1));
+      if (!src) return;
+      pop.textContent = '';
+      var b = document.createElement('b'); b.textContent = 'المصدر ' + a.textContent;
+      pop.appendChild(b); pop.appendChild(document.createTextNode(src.textContent));
+      pop.hidden = false;
+      if (current && current !== a) current.classList.remove('is-open');
+      current = a; a.classList.add('is-open'); a.setAttribute('aria-describedby', 'cite-pop');
+      var r = a.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight, vw = document.documentElement.clientWidth;
+      var top = r.top - h - 10;
+      if (top < 80) top = r.bottom + 10;   // under the sticky header there is no room above
+      pop.style.left = Math.max(16, Math.min(vw - w - 16, r.left + r.width / 2 - w / 2)) + 'px';
+      pop.style.top = top + 'px';
+    }
+    function hide() {
+      if (!current) return;
+      pop.hidden = true; current.classList.remove('is-open'); current.removeAttribute('aria-describedby'); current = null;
+    }
+    links.forEach(function (a) {
+      a.addEventListener('mouseenter', function () { show(a); });
+      a.addEventListener('mouseleave', hide);
+      a.addEventListener('focus', function () { show(a); });
+      a.addEventListener('blur', hide);
+      a.addEventListener('click', hide);
+    });
+    window.addEventListener('scroll', hide, { passive: true });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+  }
+
+  /* 27. Quote a passage: select text in the article to post it or copy it with
+     the title and address. Pointer devices only; phones keep their own menu. */
+  function quoteShare() {
+    var scope = $$('.art-body, .prose, .statement, .closing');
+    if (!scope.length || !window.getSelection || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    var h1 = $('h1'), title = h1 ? (h1.getAttribute('aria-label') || h1.textContent).trim() : document.title, text = '';
+    var bar = document.createElement('div');
+    bar.className = 'quote-bar'; bar.hidden = true; bar.setAttribute('role', 'toolbar'); bar.setAttribute('aria-label', 'الاقتباس');
+    bar.innerHTML = '<button type="button" data-q="x"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>اقتبس على اكس</button>' +
+      '<button type="button" data-q="copy"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8h11v11H8z"/><path d="M5 16V5h11"/></svg><span>انسخ الاقتباس</span></button>';
+    document.body.appendChild(bar);
+    var within = function (n) { return n && scope.some(function (s) { return s.contains(n); }); };
+    function place() {
+      var sel = window.getSelection();
+      if (!sel.rangeCount || sel.isCollapsed) { bar.hidden = true; return; }
+      var t = sel.toString().replace(/\s+/g, ' ').trim();
+      if (t.length < 12 || t.length > 320 || !within(sel.anchorNode) || !within(sel.focusNode)) { bar.hidden = true; return; }
+      text = t;
+      var r = sel.getRangeAt(0).getBoundingClientRect();
+      bar.hidden = false;
+      var w = bar.offsetWidth, vw = document.documentElement.clientWidth;
+      bar.style.left = Math.max(w / 2 + 12, Math.min(vw - w / 2 - 12, r.left + r.width / 2)) + 'px';
+      bar.style.top = Math.max(r.top, 120) + 'px';
+    }
+    document.addEventListener('mouseup', function () { setTimeout(place, 10); });
+    document.addEventListener('keyup', function (e) { if (e.shiftKey) place(); });
+    document.addEventListener('selectionchange', function () { var s = window.getSelection(); if (!s || s.isCollapsed) bar.hidden = true; });
+    window.addEventListener('scroll', function () { bar.hidden = true; }, { passive: true });
+    bar.addEventListener('mousedown', function (e) { e.preventDefault(); });   // keep the selection while pressing
+    bar.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-q]');
+      if (!b) return;
+      var quote = '«' + text + '»', url = location.href.split('#')[0];
+      if (b.getAttribute('data-q') === 'x') {
+        window.open('https://x.com/intent/post?text=' + encodeURIComponent(quote + ' — ' + title) + '&url=' + encodeURIComponent(url), '_blank', 'noopener');
+        bar.hidden = true;
+      } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(quote + '\n— ' + title + '، وتد\n' + url).then(function () {
+          var s = $('span', b); s.textContent = 'تم النسخ';
+          setTimeout(function () { s.textContent = 'انسخ الاقتباس'; bar.hidden = true; }, 1200);
+        }, function () {});
+      }
+    });
+  }
+
+  /* 28. Time left, under the contents -------------------------------------------
+     Counted from the article's words (about 180 a minute) and the reading
+     position between the first chapter and the closing line. */
+  function timeLeft() {
+    var out = $('[data-time-left]'), toc = $('[data-toc]');
+    if (!out || !toc) return;
+    var words = 0;
+    $$('.prose p, .closing p, .statement').forEach(function (p) { if (!p.closest('.statement') || p.classList.contains('statement')) words += p.textContent.trim().split(/\s+/).length; });
+    var total = Math.max(1, Math.round(words / 180)), start = toc.closest('.section') || document.body, end = $('.closing') || start;
+    var a = 0, b = 1, last = '', ticking = false;
+    var minutes = function (n) { return n === 1 ? 'دقيقة' : n === 2 ? 'دقيقتان' : n <= 10 ? n + ' دقائق' : n + ' دقيقة'; };
+    function measure() {
+      var y = window.pageYOffset;
+      a = Math.max(0, start.getBoundingClientRect().top + y - window.innerHeight * 0.2);
+      b = Math.max(a + 1, end.getBoundingClientRect().bottom + y - window.innerHeight);
+      draw();
+    }
+    function draw() {
+      ticking = false;
+      var p = Math.max(0, Math.min(1, (window.pageYOffset - a) / (b - a)));
+      var txt = p < 0.02 ? 'قراءة ' + minutes(total) : p > 0.97 ? 'انتهيت من القراءة' : 'بقي نحو ' + minutes(Math.max(1, Math.ceil(total * (1 - p))));
+      if (txt !== last) { out.textContent = txt; last = txt; }
+    }
+    window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(draw); } }, { passive: true });
+    window.addEventListener('resize', measure);
+    window.addEventListener('load', measure);
+    measure();
+  }
+
+  /* 29. Share links take the page's real address and title */
+  function shareLinks() {
+    var links = $$('[data-share]');
+    if (!links.length) return;
+    var url = location.href.split('#')[0], h1 = $('h1'), title = h1 ? (h1.getAttribute('aria-label') || h1.textContent).trim() : document.title;
+    links.forEach(function (a) {
+      var k = a.getAttribute('data-share');
+      if (k === 'x') a.href = 'https://x.com/intent/post?text=' + encodeURIComponent(title) + '&url=' + encodeURIComponent(url);
+      if (k === 'telegram') a.href = 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title);
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
-    [query, stickyHeader, drawer, searchOverlay, views, facets, tabs, chips, months, toc, follow, boards, plant, images, progress, ticker, dialogs, newsModal, copyLinks, archiveNav, archiveFilter, wikiRegister].forEach(function (fn) {
+    [query, stickyHeader, drawer, searchOverlay, views, facets, tabs, chips, months, toc, follow, boards, plant, images, progress, ticker, dialogs, newsModal, copyLinks, archiveNav, archiveFilter, wikiRegister, axisFill, counters, inkWords, cites, quoteShare, timeLeft, shareLinks].forEach(function (fn) {
       try { fn(); } catch (err) { if (window.console) console.error(err); }   // one broken block must not take the rest down
     });
   });
