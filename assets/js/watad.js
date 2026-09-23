@@ -239,7 +239,7 @@
         var on = b.getAttribute('aria-pressed') === 'true';
         $$('[data-follow]').forEach(function (x) {
           x.setAttribute('aria-pressed', on ? 'false' : 'true');
-          x.textContent = on ? 'تابع الكاتبة' : 'تتابعها الان';
+          ($('.follow__label', x) || x).textContent = on ? 'تابع الكاتبة' : 'تتابعها الان';
         });
       });
     });
@@ -1017,8 +1017,91 @@
     });
   }
 
+  /* 30. Author works: filter, sort and page in place (demo) -------------------
+     [data-works] holds [data-works-filter] tabs, [data-works-sort] chips, the
+     rows li[data-section][data-date] and a [data-works-pager]; eight rows a
+     page. The chosen tab is underlined by one sand line that slides between
+     tabs. The state is kept in ?section=&sort=&page=, which is also what the
+     server should read when the list is real. */
+  function worksList() {
+    var root = $('[data-works]');
+    if (!root) return;
+    var list = $('[data-works-list]', root), rows = $$('li[data-date]', list), tabsBox = $('.works-tabs', root);
+    var filters = $$('[data-works-filter]', root), sorts = $$('[data-works-sort]', root);
+    var pager = $('[data-works-pager]', root), countEl = $('[data-works-count]', root);
+    if (!list || !rows.length) return;
+    var PER = 8, q = new URL(location.href).searchParams;
+    var state = { section: q.get('section') || '', sort: q.get('sort') === 'old' ? 'old' : 'new', page: Math.max(1, parseInt(q.get('page'), 10) || 1) };
+    var amount = function (n) { return n === 1 ? 'مادة واحدة' : n === 2 ? 'مادتان' : n <= 10 ? n + ' مواد' : n + ' مادة'; };
+
+    var ink = null;
+    if (tabsBox) {
+      ink = document.createElement('i'); ink.className = 'tabs__ink'; ink.setAttribute('aria-hidden', 'true');
+      tabsBox.appendChild(ink); tabsBox.classList.add('has-ink');
+    }
+    function moveInk() {
+      var on = filters.filter(function (b) { return b.classList.contains('is-active'); })[0];
+      if (!ink || !on) return;
+      var r = on.getBoundingClientRect(), p = tabsBox.getBoundingClientRect();
+      ink.style.setProperty('--w', r.width + 'px');
+      ink.style.setProperty('--x', (r.left - p.left + tabsBox.scrollLeft) + 'px');
+    }
+    function link(label, page, cls, current) {
+      var a = document.createElement('a');
+      a.href = 'author.html?page=' + page; a.textContent = label; a.setAttribute('data-page', page);
+      if (cls) a.className = cls;
+      if (current) a.setAttribute('aria-current', 'page');
+      return a;
+    }
+    function buildPager(pages) {
+      if (!pager) return;
+      pager.textContent = '';
+      if (state.page > 1) pager.appendChild(link('السابق', state.page - 1, 'pager__prev'));
+      else { var d = document.createElement('span'); d.className = 'pager__prev'; d.setAttribute('aria-disabled', 'true'); d.textContent = 'السابق'; pager.appendChild(d); }
+      for (var i = 1; i <= pages; i++) pager.appendChild(link(String(i), i, '', i === state.page));
+      if (state.page < pages) pager.appendChild(link('التالي', state.page + 1, 'pager__next'));
+      var info = document.createElement('span'); info.className = 'pager__info'; info.textContent = 'الصفحة ' + state.page + ' من ' + pages;
+      pager.appendChild(info);
+    }
+    function render(animate, scroll) {
+      var pool = rows.filter(function (r) { return !state.section || r.getAttribute('data-section') === state.section; });
+      pool.sort(function (a, b) { var x = a.getAttribute('data-date'), y = b.getAttribute('data-date'); return (x < y ? 1 : x > y ? -1 : 0) * (state.sort === 'new' ? 1 : -1); });
+      var pages = Math.max(1, Math.ceil(pool.length / PER));
+      state.page = Math.min(state.page, pages);
+      var shown = pool.slice((state.page - 1) * PER, state.page * PER);
+      pool.forEach(function (r) { list.appendChild(r); });
+      rows.forEach(function (r) { r.setAttribute('data-hidden', shown.indexOf(r) === -1 ? 'true' : 'false'); });
+      filters.forEach(function (b) { var on = (b.getAttribute('data-works-filter') || '') === state.section; b.classList.toggle('is-active', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+      sorts.forEach(function (b) { var on = b.getAttribute('data-works-sort') === state.sort; b.classList.toggle('is-active', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+      if (countEl) countEl.textContent = amount(pool.length);
+      buildPager(pages);
+      moveInk();
+      if (animate && !reduced.matches) shown.forEach(function (r, i) {
+        if (r.animate) r.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: i * 45, easing: EASE_OUT, fill: 'backwards' });
+      });
+      var u = new URL(location.href);
+      [['section', state.section], ['sort', state.sort === 'new' ? '' : 'old'], ['page', state.page > 1 ? state.page : '']].forEach(function (kv) {
+        if (kv[1]) u.searchParams.set(kv[0], kv[1]); else u.searchParams.delete(kv[0]);
+      });
+      history.replaceState(null, '', u);
+      if (scroll) root.scrollIntoView({ behavior: reduced.matches ? 'auto' : 'smooth', block: 'start' });
+    }
+    filters.forEach(function (b) { b.addEventListener('click', function () { state.section = b.getAttribute('data-works-filter') || ''; state.page = 1; render(true, false); }); });
+    sorts.forEach(function (b) { b.addEventListener('click', function () { if (state.sort === b.getAttribute('data-works-sort')) return; state.sort = b.getAttribute('data-works-sort'); state.page = 1; render(true, false); }); });
+    if (pager) pager.addEventListener('click', function (e) {
+      var a = e.target.closest('[data-page]');
+      if (!a) return;
+      e.preventDefault();
+      state.page = parseInt(a.getAttribute('data-page'), 10) || 1;
+      render(true, true);
+    });
+    window.addEventListener('resize', moveInk);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveInk);
+    render(false, false);
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
-    [query, stickyHeader, drawer, searchOverlay, views, facets, tabs, chips, months, toc, follow, boards, plant, images, progress, ticker, dialogs, newsModal, copyLinks, archiveNav, archiveFilter, wikiRegister, axisFill, counters, inkWords, cites, quoteShare, timeLeft, shareLinks].forEach(function (fn) {
+    [query, stickyHeader, drawer, searchOverlay, views, facets, tabs, chips, months, toc, follow, boards, plant, images, progress, ticker, dialogs, newsModal, copyLinks, archiveNav, archiveFilter, wikiRegister, axisFill, counters, inkWords, cites, quoteShare, timeLeft, shareLinks, worksList].forEach(function (fn) {
       try { fn(); } catch (err) { if (window.console) console.error(err); }   // one broken block must not take the rest down
     });
   });

@@ -14,7 +14,7 @@ Static front-end theme for **وتد (watad.media)**. The whole thing is plain HT
 | `category.html` | القسم (سياسة): عنوان القسم كتصميم، مادة مختارة، ثم كل المواد بشكل القائمة المطلوب + ارقام صفحات |
 | `search.html` | نتائج البحث: قائمة / شبكة / مضغوط + تصفية تعمل |
 | `search-empty.html` | البحث بلا نتائج |
-| `author.html` | صفحة الكاتب (تبويبات، متابعة، حسابات) |
+| `author.html` | صفحة الكاتب: صورة مفرغة على بلاطة الهوية، بطاقة نشر (عدد، توزيع الاقسام، ايقاع السنة شهرا بشهر)، كل المواد بتبويب وترتيب وصفحات تعمل، متابعة، كتاب القسم |
 | `archive.html` | الارشيف «السجل»: تصفح بالتاريخ (سنة ثم شهر، مثل كانون الاول 2025)، شهور تفتح وتطوى، ارقام صفحات |
 | `news.html` | خبر وتعليق: خط زمني قريب من شكل تويتر، والخبر يفتح في نافذة منبثقة (صفحته المفردة) |
 | `writers.html` | كتاب وتد: كل الكتاب بصورهم |
@@ -28,7 +28,7 @@ Open any file directly in the browser. The only external request is Google Fonts
 
 ```
 assets/
-  css/watad.css      one stylesheet, sections numbered 1–31
+  css/watad.css      one stylesheet, sections numbered 1–32
   js/watad.js        vanilla JS, behaviour opt-in via data-attributes
   img/brand/         logo + the six identity marks (SVG)
   img/posts/         demo images (posters 9:16, covers 16:9)
@@ -149,10 +149,11 @@ Still with the client: the designer's section artwork, the writers' cut-out phot
 | `.cite > a[href="#src-N"]` + `li#src-N` in `.sources` | Citation with a source preview |
 | `data-time-left` | Time left to read, inside the article contents |
 | `data-share="x\|telegram"` | Share links, rebuilt from the page's address and title |
+| `data-works` with `data-works-filter`, `data-works-sort`, `data-works-list` > `li[data-section][data-date]`, `data-works-pager`, `data-works-count` | The author's works. Filters by section, sorts newest or oldest, and shows 8 a page. The state lives in `?section=&sort=&page=`, and a sand line slides between the tabs. With real data, the server reads the same parameters. |
 
 ## Laravel / Blade
 
-1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=11`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
+1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=13`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
 2. **Active nav**: add `aria-current="page"` to the current section link, e.g. `@if(request()->is('politics*')) aria-current="page" @endif`.
 3. **Story component**: `<x-story :post="$post" variant="row" />` should output:
    ```html
@@ -170,8 +171,9 @@ Still with the client: the designer's section artwork, the writers' cut-out phot
 7. **خبر وتعليق**: posts are a separate type (news line, editor's comment, place, time, related article). The timeline is `news?page=`, and each post also needs its own URL (`news/{id}`) that renders the same popup content as a page for sharing and search engines.
 8. **Section artwork**: add an image field to sections (square, SVG or PNG at least 800×800). Output it inside `.secart`, falling back to the text placeholder when it's empty.
 9. **Writers**: add a `photo_cutout` (transparent PNG, portrait, at least 800×1000) and an `is_featured` / `sort` to pick the six shown on the home page.
-11. **Article**: split the title into word spans in Blade (`@foreach(explode(' ', $post->title) as $i => $w)<span class="tw" style="--i:{{ $i }}">{{ $w }}</span> @endforeach`) and keep the whole title in the `h1`'s `aria-label`. Citations come from the editor as `[1]` markers, rendered as `.cite` links to the sources list.
 10. **ثورة ويكي**: entries are numbered in the order they're added to the register (083 is the latest). The year links go to `archive.html?y=&section=ثورة ويكي`. Render the chosen year's latest entries server-side, and point the search box at a query endpoint when the register grows. Add `data-img` to a row when the entry has a poster; without one, the preview builds its index card from the row.
+11. **Article**: split the title into word spans in Blade (`@foreach(explode(' ', $post->title) as $i => $w)<span class="tw" style="--i:{{ $i }}">{{ $w }}</span> @endforeach`) and keep the whole title in the `h1`'s `aria-label`. Citations come from the editor as `[1]` markers, rendered as `.cite` links to the sources list.
+12. **Author**: the portrait is the writer's cut-out photo on the teal tile. The profile's twelve-month strip is `GROUP BY month` over the last year: each `li` gets `--h` (the share of the busiest month) and a `data-tip` label.
 
 ## Images
 
