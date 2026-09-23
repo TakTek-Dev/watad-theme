@@ -327,20 +327,26 @@
 
   /* 12. Wedges are driven into the axis as they reach the reader ---------
      Marks already on screen play their CSS load animation; the ones below
-     the fold are held back here and released when they scroll in. */
+     the fold are held back here and released when they scroll in. Blocks
+     marked [data-grow] (bars) are released the same way. */
   function plant() {
     if (reduced.matches || !('IntersectionObserver' in window)) return;
-    var io = new IntersectionObserver(function (es) {
+    var land = function (es, obs) {
       es.forEach(function (e) {
         if (!e.isIntersecting) return;
         e.target.classList.add('is-in');
-        io.unobserve(e.target);
+        obs.unobserve(e.target);
       });
-    }, { rootMargin: '0px 0px -12% 0px' });
-    var fold = window.innerHeight;
+    };
+    var io = new IntersectionObserver(land, { rootMargin: '0px 0px -12% 0px' });
+    var edge = new IntersectionObserver(land);   // near the end of the page a mark can never climb 12% up the screen
+    var fold = window.innerHeight, y = window.pageYOffset, end = document.documentElement.scrollHeight;
     // every read first, then every write, so the page lays out once
-    var later = $$('.wedge,.ab-mark__art').filter(function (el) { return el.getClientRects().length && el.getBoundingClientRect().top >= fold; });
-    later.forEach(function (el) { el.classList.add('is-waiting'); io.observe(el); });
+    var later = $$('.wedge,.ab-mark__art,[data-grow]').map(function (el) {
+      var r = el.getClientRects().length ? el.getBoundingClientRect() : null;
+      return r && r.top >= fold ? { el: el, nearEnd: end - (r.bottom + y) < fold * 0.3 } : null;
+    }).filter(Boolean);
+    later.forEach(function (m) { m.el.classList.add('is-waiting'); (m.nearEnd ? edge : io).observe(m.el); });
   }
 
   /* 13. Images fade in as they arrive instead of popping ----------------- */
@@ -615,8 +621,185 @@
     setTimeout(function () { group.scrollIntoView({ behavior: reduced.matches ? 'auto' : 'smooth', block: 'start' }); }, 250);
   }
 
+  /* 21. ثورة ويكي register (home) ------------------------------------------
+     [data-wiki] holds year links [data-wiki-year][data-count], a search box
+     [data-wiki-search] and a table of rows tr[data-year][data-img?]. A year
+     shows its rows; typing searches every year (أ/إ/آ, ة/ه and ى/ي match each
+     other). The row under the pointer or focus is shown in [data-wiki-preview]:
+     its poster, or an index card built from the row when it has none. With
+     real data, the year links render server-side and the search can query. */
+  function wikiRegister() {
+    var root = $('[data-wiki]');
+    if (!root) return;
+    var rows = $$('tbody tr[data-year]', root), chips = $$('[data-wiki-year]', root);
+    var input = $('[data-wiki-search]', root), count = $('[data-wiki-count]', root), empty = $('[data-wiki-empty]', root);
+    var pv = $('[data-wiki-preview]', root), frame = pv && $('.wk-preview__frame', pv), meta = pv && $('.wk-preview__meta', pv);
+    if (!rows.length || !chips.length) return;
+    var fine = window.matchMedia('(hover: hover)');
+    var active = chips.filter(function (c) { return c.classList.contains('is-active'); })[0] || chips[0];
+    var year = active.getAttribute('data-wiki-year'), q = '';
+    var shownRow = rows.filter(function (r) { return !r.hidden; })[0] || null;
+    var FOLD = { 'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ة': 'ه', 'ى': 'ي', 'ؤ': 'و', 'ئ': 'ي' };
+    var norm = function (s) { return s.replace(/[أإآةىؤئ]/g, function (ch) { return FOLD[ch]; }).replace(/[ً-ْ]/g, '').toLowerCase(); };
+    var entries = function (n) { return n === 1 ? 'مدخل واحد' : n === 2 ? 'مدخلان' : n <= 10 ? n + ' مداخل' : n + ' مدخلا'; };
+    var results = function (n) { return n === 1 ? 'نتيجة واحدة' : n === 2 ? 'نتيجتان' : n <= 10 ? n + ' نتائج' : n + ' نتيجة'; };
+    var el = function (tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text) n.textContent = text; return n; };
+
+    function card(d) {
+      var c = el('div', 'wk-card');
+      c.appendChild(el('span', 'wk-card__label', 'ثورة ويكي'));
+      c.appendChild(el('b', 'wk-card__n', d.n));
+      c.appendChild(el('span', 'wk-card__type', d.type));
+      c.appendChild(el('span', 'wk-card__title', d.title));
+      c.appendChild(el('span', 'wk-card__by', d.author + ' — ' + d.year));
+      c.insertAdjacentHTML('beforeend', '<svg class="wk-card__mark" viewBox="0 0 52.46 69.13" aria-hidden="true"><path d="M36.7,0C16.43,0,0,16.43,0,36.7v15.35h34.97s0,17.08,0,17.08c11.35-15.37,17.49-26.96,17.49-46.08V0h-15.76ZM34.97,34.97h-17.49c0-9.66,7.83-17.49,17.49-17.49v17.49Z"/></svg>');
+      return c;
+    }
+    function preview(r) {
+      rows.forEach(function (x) { x.classList.toggle('is-previewed', x === r); });
+      if (!pv) return;
+      pv.classList.toggle('is-empty', !r);   // nothing matches: the last entry steps back instead of standing in for a result
+      if (!r || r === shownRow) return;
+      shownRow = r;
+      var cells = r.cells, a = $('a', r), img = r.getAttribute('data-img');
+      var d = { n: cells[0].textContent, type: cells[1].textContent, title: a.textContent, author: cells[3].textContent, year: r.getAttribute('data-year') };
+      frame.setAttribute('href', a.getAttribute('href'));
+      frame.textContent = '';
+      if (img) {
+        var im = el('img', 'poster'); im.alt = ''; im.width = 540; im.height = 960; im.src = img;
+        frame.appendChild(im);
+      } else frame.appendChild(card(d));
+      meta.children[0].textContent = 'المدخل ' + d.n + ' — ' + d.type;
+      meta.children[1].textContent = d.title;
+      meta.children[2].textContent = d.author + ' · ' + d.year;
+      if (!reduced.matches) { pv.classList.remove('is-swap'); void pv.offsetWidth; pv.classList.add('is-swap'); }
+    }
+    function apply(animate) {
+      var term = norm(q.trim()), shown = [];
+      rows.forEach(function (r) {
+        var ok = term ? norm(r.textContent).indexOf(term) !== -1 : r.getAttribute('data-year') === year;
+        r.hidden = !ok;
+        if (ok) shown.push(r);
+      });
+      chips.forEach(function (c) {
+        var on = !term && c.getAttribute('data-wiki-year') === year;
+        c.classList.toggle('is-active', on);
+        if (on) c.setAttribute('aria-current', 'true'); else c.removeAttribute('aria-current');
+      });
+      count.textContent = '';
+      if (term && shown.length) {
+        count.appendChild(el('b', '', results(shown.length)));
+        count.appendChild(document.createTextNode(' في كل السنوات'));
+      } else if (!term) {
+        var chip = chips.filter(function (c) { return c.getAttribute('data-wiki-year') === year; })[0];
+        var total = parseInt(chip.getAttribute('data-count'), 10) || shown.length;
+        count.appendChild(el('b', '', entries(total)));
+        count.appendChild(document.createTextNode(' في ' + year + (total > shown.length ? '، هذه احدثها' : '')));
+        if (total > shown.length) { var all = el('a', '', 'عرض الكل'); all.href = chip.getAttribute('href'); count.appendChild(document.createTextNode(' — ')); count.appendChild(all); }
+      }
+      if (empty) { empty.hidden = shown.length !== 0; $('[data-wiki-q]', empty).textContent = q.trim(); }
+      if (animate && !reduced.matches) shown.slice(0, 8).forEach(function (r, i) {
+        if (r.animate) r.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 320, delay: i * 40, easing: EASE_OUT, fill: 'backwards' });
+      });
+      preview(shown[0] || null);
+    }
+    function reset(focus) { if (input) input.value = ''; q = ''; apply(true); if (focus && input) input.focus(); }
+
+    chips.forEach(function (c) {
+      c.addEventListener('click', function (e) {
+        e.preventDefault();
+        year = c.getAttribute('data-wiki-year');
+        reset(false);
+      });
+    });
+    if (input) {
+      input.addEventListener('input', function () { q = input.value; apply(false); });
+      input.addEventListener('keydown', function (e) { if (e.key === 'Escape' && input.value) { e.stopPropagation(); reset(false); } });
+    }
+    $$('[data-wiki-clear]', root).forEach(function (b) { b.addEventListener('click', function () { reset(true); }); });
+    rows.forEach(function (r) {
+      r.addEventListener('mouseenter', function () { if (fine.matches) preview(r); });
+      r.addEventListener('focusin', function () { preview(r); });
+    });
+    rows.forEach(function (x) { x.classList.toggle('is-previewed', x === shownRow); });
+  }
+
+  /* 22. Archive: filter by section and type (demo) --------------------------
+     The القسم / النوع chips ([data-archive-filter] > [data-value]) filter the
+     month rows by their kicker ("سياسة — تحليل"), and ?section= / ?type=
+     arrive from links such as "كل مداخل ثورة ويكي". With real data, send the
+     same parameters to the server instead. */
+  function archiveFilter() {
+    var groups = $$('[data-archive-filter]');
+    if (!groups.length) return;
+    var rows = $$('.month .arow'), state = {}, params = new URL(location.href).searchParams;
+    rows.forEach(function (r) {
+      var k = $('.kicker', r), parts = k ? k.textContent.split('—') : [];
+      r.setAttribute('data-section', (parts[0] || '').trim());
+      r.setAttribute('data-type', (parts[1] || '').trim());
+    });
+    var box = groups[0].closest('.arcal__filters') || groups[0].parentNode;
+    var note = document.createElement('p');
+    note.className = 'arcal__note';
+    note.setAttribute('aria-live', 'polite');
+    note.hidden = true;
+    box.appendChild(note);
+    function mark() {
+      groups.forEach(function (g) {
+        var k = g.getAttribute('data-archive-filter');
+        $$('[data-value]', g).forEach(function (b) {
+          var on = b.getAttribute('data-value') === (state[k] || '');
+          b.classList.toggle('is-active', on);
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+      });
+    }
+    function apply() {
+      var any = !!(state.section || state.type), total = 0;
+      rows.forEach(function (r) {
+        var ok = (!state.section || r.getAttribute('data-section') === state.section) && (!state.type || r.getAttribute('data-type') === state.type);
+        r.setAttribute('data-hidden', ok ? 'false' : 'true');
+        if (ok) total++;
+      });
+      $$('.ar-strip').forEach(function (s) { s.setAttribute('data-hidden', any ? 'true' : 'false'); });
+      $$('.month').forEach(function (m) {
+        var body = $('.month__body', m);
+        if (!body) return;
+        var none = $('.month__none', body);
+        if (!none) { none = document.createElement('p'); none.className = 'month__none'; none.textContent = 'لا مواد بهذا التصنيف في هذا الشهر.'; body.insertBefore(none, body.firstChild); }
+        none.hidden = !any || $$('.arow', body).some(function (r) { return r.getAttribute('data-hidden') !== 'true'; });
+      });
+      note.hidden = !any;
+      if (any) {
+        note.textContent = '';
+        var b = document.createElement('b');
+        b.textContent = [state.section, state.type].filter(Boolean).join(' — ');
+        note.appendChild(b);
+        note.appendChild(document.createTextNode('، ' + total + (total === 1 ? ' مادة' : total === 2 ? ' مادتان' : total <= 10 ? ' مواد' : ' مادة') + ' في الشهور المعروضة. '));
+        var clear = document.createElement('button');
+        clear.type = 'button'; clear.className = 'link-quiet'; clear.textContent = 'امسح التصفية';
+        clear.addEventListener('click', function () { state = {}; mark(); apply(); });
+        note.appendChild(clear);
+      }
+      var u = new URL(location.href);
+      ['section', 'type'].forEach(function (k) { if (state[k]) u.searchParams.set(k, state[k]); else u.searchParams.delete(k); });
+      history.replaceState(null, '', u);
+    }
+    groups.forEach(function (g) {
+      g.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-value]');
+        if (!b) return;
+        state[g.getAttribute('data-archive-filter')] = b.getAttribute('data-value');
+        mark(); apply();
+      });
+    });
+    state.section = params.get('section') || '';
+    state.type = params.get('type') || '';
+    mark(); apply();
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
-    [query, stickyHeader, drawer, searchOverlay, views, facets, tabs, chips, months, toc, follow, boards, plant, images, progress, ticker, dialogs, newsModal, copyLinks, archiveNav].forEach(function (fn) {
+    [query, stickyHeader, drawer, searchOverlay, views, facets, tabs, chips, months, toc, follow, boards, plant, images, progress, ticker, dialogs, newsModal, copyLinks, archiveNav, archiveFilter, wikiRegister].forEach(function (fn) {
       try { fn(); } catch (err) { if (window.console) console.error(err); }   // one broken block must not take the rest down
     });
   });

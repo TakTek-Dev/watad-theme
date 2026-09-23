@@ -28,7 +28,7 @@ Open any file directly in the browser. The only external request is Google Fonts
 
 ```
 assets/
-  css/watad.css      one stylesheet, sections numbered 1–26
+  css/watad.css      one stylesheet, sections numbered 1–29
   js/watad.js        vanilla JS, behaviour opt-in via data-attributes
   img/brand/         logo + the six identity marks (SVG)
   img/posts/         demo images (posters 9:16, covers 16:9)
@@ -109,6 +109,9 @@ Still with the client: the designer's section artwork, the writers' cut-out phot
 | `.writer`, `.writer--card`, `.writer--more`, `.writers-row`, `.writers-list`, `.writers-grid` | Writers: portrait tile + name + field + count |
 | `dialog.modal` | Popup (native dialog). A sheet from below on phones. |
 | `.xside` > `.xfeed` > `.xpost` | X feed panel |
+| `.wk` (`[data-wiki]`) | The ثورة ويكي register on the home page: `.wk-preview` (poster, or `.wk-card` built from the row), `.wk-years` year links, `.wk-search`, `.wk-table` rows `tr[data-year][data-img]` |
+| `.wd-about`, `.wd-rec` | Home closing: the statement with the name's meaning and three ways in, then the archive on paper (years with their weight, a month jump, numbered pages) |
+| `.site-footer` | Footer aligned to the rail. The axis runs on into it and ends on the base row's ground line with the sand quote-wedge (`.site-footer__end`). Columns: الاقسام / عن وتد / تصفح / تابع وتد, then © and "الى الاعلى". |
 | `.arcal` | Archive calendar: `.arcal__years` tabs, `.arcal__grid[data-year-grid]`, `.arcal__m` months |
 
 ## JavaScript API (`data-*`)
@@ -131,10 +134,13 @@ Still with the client: the designer's section artwork, the writers' cut-out phot
 | `data-news-modal`, `data-news`, `data-news-open`, `data-news-prev/next` | The خبر وتعليق popup, filled from the post that was opened |
 | `data-copy-link="#id"` | Copies this page's address with that anchor |
 | `data-arcal`, `data-year`, `data-year-grid`, `data-key="2026-09"` on `.month` | Archive by date: switches the year and marks the month from `?y=&m=` |
+| `data-archive-filter="section\|type"` + `data-value` on the archive chips | Filters the month rows by their kicker (`سياسة — تحليل`). Also reads `?section=&type=`, which is how "كل مداخل ثورة ويكي" links in. |
+| `data-wiki`, `data-wiki-year` + `data-count`, `data-wiki-search`, `data-wiki-preview`, `data-wiki-count`, `data-wiki-empty`, `data-wiki-clear` | The ثورة ويكي register. The years filter it, and the search covers every year and treats أ/إ/آ, ة/ه and ى/ي as the same letter. The row under the pointer or keyboard focus shows in the preview. |
+| `data-grow` | A block whose bars grow when it scrolls into view (the archive years at the home closing) |
 
 ## Laravel / Blade
 
-1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=4`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
+1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=8`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
 2. **Active nav**: add `aria-current="page"` to the current section link, e.g. `@if(request()->is('politics*')) aria-current="page" @endif`.
 3. **Story component**: `<x-story :post="$post" variant="row" />` should output:
    ```html
@@ -152,6 +158,7 @@ Still with the client: the designer's section artwork, the writers' cut-out phot
 7. **خبر وتعليق**: posts are a separate type (news line, editor's comment, place, time, related article). The timeline is `news?page=`, and each post also needs its own URL (`news/{id}`) that renders the same popup content as a page for sharing and search engines.
 8. **Section artwork**: add an image field to sections (square, SVG or PNG at least 800×800). Output it inside `.secart`, falling back to the text placeholder when it's empty.
 9. **Writers**: add a `photo_cutout` (transparent PNG, portrait, at least 800×1000) and an `is_featured` / `sort` to pick the six shown on the home page.
+10. **ثورة ويكي**: entries are numbered in the order they're added to the register (083 is the latest). The year links go to `archive.html?y=&section=ثورة ويكي`. Render the chosen year's latest entries server-side, and point the search box at a query endpoint when the register grows. Add `data-img` to a row when the entry has a poster; without one, the preview builds its index card from the row.
 
 ## Images
 

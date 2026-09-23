@@ -36,6 +36,7 @@
   --ease-in:cubic-bezier(.55,0,1,.45);   /* exits */
   --start:left;            /* physical side of inline-start, for transform-origin */
   --dir:1;                 /* reading direction, for small directional nudges */
+  --arrow:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath d='M20 12H5M11 6l-6 6 6 6'/%3E%3C/svg%3E");   /* forward in RTL; flip with scaleX(-1 * --dir) */
 }
 [dir="rtl"]{--start:right;--dir:-1}
 
@@ -164,12 +165,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 .search-overlay .btn{background:transparent;border-color:rgba(255,255,255,.55)}   /* a teal button on the teal veil had no edge */
 .search-overlay .btn:hover{background:#fff;border-color:#fff;color:var(--teal)}
 
-.site-footer{position:relative;z-index:1;background:var(--teal);border-top:1px solid rgba(255,255,255,.2);color:var(--on-dark);padding:32px 0 38px}
-.site-footer__row{display:flex;justify-content:space-between;align-items:center;gap:28px;flex-wrap:wrap}
-.site-footer__brand{display:flex;align-items:center;gap:20px}
-.site-footer__tag{font-size:12.5px;color:#CFD9DA}
-.site-footer__links{display:flex;gap:26px;flex-wrap:wrap;font-size:12.5px}
-.site-footer__links a:hover{color:#fff}
 
 /* 6. Components ------------------------------------------------------------ */
 /* rail label */
@@ -429,7 +424,6 @@ button{font:inherit;color:inherit;cursor:pointer}
   .arow{grid-template-columns:22px minmax(0,1fr);gap:12px}
   .arow>span:last-of-type{display:none}
   .arow b{font-size:15.5px}
-  .site-footer__row{flex-direction:column;align-items:flex-start}
   .hide-mobile{display:none!important}
   .hide-desktop{display:block}
   .stat b{font-size:28px}
@@ -447,16 +441,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 .boards__strip>:nth-child(1){width:266px}.boards__strip>:nth-child(2){width:200px}.boards__strip>:nth-child(3){width:160px}
 .home-sec{display:grid;grid-template-columns:minmax(0,1fr) 240px 200px;gap:var(--gap);align-items:start}
 .home-build{display:grid;grid-template-columns:320px minmax(0,1fr) 200px;gap:var(--gap);align-items:end}
-.home-wiki{display:grid;grid-template-columns:320px minmax(0,1fr);gap:var(--gap);align-items:start}
-.wiki-table{width:100%;border-collapse:collapse;font-size:13px}
-.wiki-table th{font-size:11px;font-weight:600;color:var(--grey);text-align:start;padding:0 0 8px;border-bottom:1px solid var(--ink)}
-.wiki-table td{padding:11px 0;border-bottom:1px solid var(--hair);vertical-align:baseline}
-.wiki-table td:first-child{color:var(--sand);font-weight:600;width:44px}
-.wiki-table td:nth-child(2){color:var(--teal);font-weight:600;width:90px}
-.wiki-table td:nth-child(3) a{font-size:15px;font-weight:600}
-.wiki-table td:nth-child(3) a:hover{color:var(--teal)}
-.wiki-table td:nth-child(4){color:var(--mid);width:150px}
-.wiki-table td:last-child{color:var(--grey);width:50px}
 .home-news{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:var(--gap);align-items:start}
 .news-item{display:grid;grid-template-columns:96px minmax(0,1fr);gap:26px;border-top:1px solid rgba(255,255,255,.2);padding:18px 0}
 .news-item:first-child{border-top-color:rgba(255,255,255,.5)}
@@ -473,18 +457,13 @@ button{font:inherit;color:inherit;cursor:pointer}
 .authors-row .kicker{margin-top:10px}
 .authors-row span{display:block;font-size:13px;color:var(--on-dark);line-height:1.5;margin-top:5px}
 .authors-row small{display:block;font-size:11px;color:var(--on-dark-2);margin-top:6px}
-.about-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap)}
-.about-3>div{border-top:1px solid var(--ink);padding-top:14px}
-.about-3 b{display:block;font-size:18px;font-weight:600}
-.about-3 p{font-family:var(--body);font-size:16px;line-height:1.85;color:#3A3A40;margin-top:8px}
 .archive-bar{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;border-top:1px solid var(--ink);padding-top:18px}
 .archive-bar select{font-family:var(--disp);font-size:13px;border:1px solid var(--hair);background:#fff;padding:8px 12px;color:var(--ink)}
 
 @media (max-width:1199px){
   .home-sec{grid-template-columns:minmax(0,1fr) 220px 170px}
   .boards{grid-template-columns:260px minmax(0,1fr)}
-  .home-build,.home-wiki{grid-template-columns:260px minmax(0,1fr) 170px}
-  .home-wiki{grid-template-columns:260px minmax(0,1fr)}
+  .home-build{grid-template-columns:260px minmax(0,1fr) 170px}
   .authors-row{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:30px}
 }
 @media (max-width:1023px){
@@ -499,20 +478,18 @@ button{font:inherit;color:inherit;cursor:pointer}
   .pull-up{margin-top:0}
 }
 @media (max-width:767px){
-  .home-lead,.boards,.home-sec,.home-build,.home-wiki{grid-template-columns:1fr}
+  .home-lead,.boards,.home-sec,.home-build{grid-template-columns:1fr}
   .home-lead__more{grid-template-columns:1fr;gap:0}
   .home-lead__more>*{border-top:1px solid var(--hair);padding:12px 0}
   .home-lead__more>*:first-child{border-top:0}
   .home-lead__side{display:grid;grid-template-columns:120px 1fr;gap:16px}
   .boards>:first-child{max-width:260px}
   .boards__strip>:nth-child(1){width:150px}.boards__strip>:nth-child(2){width:120px}.boards__strip>:nth-child(3){width:100px}
-  .home-build>:first-child,.home-wiki>:first-child{max-width:240px}
+  .home-build>:first-child{max-width:240px}
   .home-build>:nth-child(3){grid-template-columns:130px minmax(0,1fr)}
   .home-sec>:nth-child(3){max-width:220px}
-  .wiki-table th:nth-child(4),.wiki-table td:nth-child(4),.wiki-table th:last-child,.wiki-table td:last-child{display:none}
   .news-item{grid-template-columns:1fr;gap:6px}
   .authors-row{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .about-3{grid-template-columns:1fr}
   .archive-bar form{flex-wrap:wrap}
   .archive-bar form>.meta{flex-basis:100%}
 }
@@ -527,7 +504,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .byline a:hover b{color:var(--teal)}
 .band .byline a:hover b{color:var(--sand)}
 /* grid children must be allowed to shrink (long Arabic titles, strips) */
-.l>*,.split>*,.cols-3>*,.cols-4>*,.home-lead>*,.boards>*,.home-sec>*,.home-build>*,.home-wiki>*,.home-news>*,.home-people>*,.authors-row>*,.about-3>*{min-width:0}
+.l>*,.split>*,.cols-3>*,.cols-4>*,.home-lead>*,.boards>*,.home-sec>*,.home-build>*,.home-news>*,.home-people>*,.authors-row>*{min-width:0}
 
 /* 12. Article --------------------------------------------------------------- */
 .art-head .body{max-width:1000px}
@@ -707,7 +684,7 @@ button{font:inherit;color:inherit;cursor:pointer}
    has already taken charge of revealing it (sections 11-14 there). */
 
 /* feedback: colour */
-.site-header__tools a,.site-header__secs a,.icon-btn,.story__title,.idx>b,.arow b,.tab,.chip,.viewbtn,.facet__opt span,.link-quiet,.link-accent,.crumbs a,.toc a,.terms a,.xfeed a,.ticker__items a,.wiki-table a,.rail-label a,.art-author a,.byline b,.site-footer__links a,.authors-row b,.btn,.social a,.pager a{transition:color .2s,background-color .2s,border-color .2s}
+.site-header__tools a,.site-header__secs a,.icon-btn,.story__title,.idx>b,.arow b,.tab,.chip,.viewbtn,.facet__opt span,.link-quiet,.link-accent,.crumbs a,.toc a,.terms a,.xfeed a,.ticker__items a,.rail-label a,.art-author a,.byline b,.site-footer__col a,.authors-row b,.btn,.social a,.pager a{transition:color .2s,background-color .2s,border-color .2s}
 .site-header__tools a:hover,.site-header__secs a:hover,.xfeed a:hover{color:#fff}
 .ticker__items a:hover{color:var(--teal)}
 .authors-row a:hover b{color:var(--sand)}
@@ -1115,6 +1092,10 @@ a.arcal__m:hover .arcal__bar::after{background:var(--teal)}
 .arcal__result span{font-size:13px;color:var(--mid)}
 .arcal__empty{margin-top:14px;padding:16px 20px;background:var(--paper);font-size:14px;line-height:1.8;color:var(--mid)}
 .month.is-picked .rail-label b{color:var(--teal)!important}
+.arcal__note{margin-top:14px;padding:12px 16px;background:var(--paper);font-size:13px;line-height:1.7;color:var(--mid)}   /* section / type filter in force (watad.js 22) */
+.arcal__note b{font-weight:600;color:var(--teal)}
+.arcal__note button{padding:0 0 2px;border:0;border-bottom:1px solid currentColor;background:none;font:inherit;color:var(--teal);cursor:pointer}
+.month__none{padding:14px 0;border-top:1px solid var(--hair);font-size:13px;color:var(--grey)}
 @media (max-width:1023px){.arcal__grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media (max-width:767px){
   .arcal__grid{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:14px}
@@ -1126,3 +1107,180 @@ a.arcal__m:hover .arcal__bar::after{background:var(--teal)}
 @media (prefers-reduced-motion:no-preference){
   .arcal__grid:not([hidden]) .arcal__bar::after{transform-origin:var(--start) center;animation:bar-grow .9s var(--ease-out) backwards;animation-delay:calc(var(--i) * 40ms + 150ms)}
 }
+
+/* 27. ثورة ويكي register (home) -----------------------------------------------
+   The index works: the years filter it, the search box searches every year,
+   and the entry under the pointer (or keyboard focus) is shown at the side,
+   as its poster or, when it has none, as its index card (watad.js 21). Each
+   row is one link. Without JS it shows the latest year, and the years are
+   links into the archive. */
+.wk{display:grid;grid-template-columns:240px minmax(0,1fr);gap:var(--gap);align-items:start}
+.wk>*{min-width:0}
+.wk-preview{position:sticky;top:calc(var(--stick-h) + 24px)}
+.wk-preview__frame{position:relative;display:block;aspect-ratio:9/16;overflow:hidden;background:var(--teal)}
+.wk-preview__frame .poster{width:100%;height:100%}
+.wk-preview__meta{margin-top:12px}
+.wk-preview__title{display:block;margin-top:6px;font-size:17px;font-weight:700;line-height:1.5}
+.wk-preview__by{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--hair);font-size:12px;color:var(--grey)}
+.wk-card{position:absolute;inset:0;display:flex;flex-direction:column;padding:22px 20px;background:var(--teal);color:#fff}
+.wk-card__label{font-size:11.5px;font-weight:600;color:var(--on-dark-2)}
+.wk-card__n{margin-top:10px;font-size:64px;font-weight:700;line-height:1;color:var(--sand);font-variant-numeric:tabular-nums}
+.wk-card__type{margin-top:auto;font-size:12.5px;font-weight:600;color:var(--sand)}
+.wk-card__title{margin-top:8px;font-size:22px;font-weight:700;line-height:1.45}
+.wk-card__by{margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,.22);font-size:12px;color:var(--on-dark-2)}
+.wk-card__mark{position:absolute;top:22px;inset-inline-end:20px;width:24px;height:auto}
+.wk-card__mark path{fill:var(--sand)}
+.wk-head{display:flex;justify-content:space-between;align-items:center;gap:14px 28px;flex-wrap:wrap}
+.wk-years{gap:18px}
+.wk-search{display:flex;align-items:center;gap:8px;flex:0 1 300px;min-width:220px;height:42px;padding-inline:12px;border:1px solid var(--hair);background:#fff;transition:border-color .2s}
+.wk-search:focus-within{border-color:var(--teal);outline:2px solid var(--sand);outline-offset:2px}
+.wk-search svg{flex:0 0 auto;width:16px;height:16px;color:var(--grey)}
+.wk-search input{flex:1;min-width:0;height:100%;padding:0;border:0;outline:0;background:none;font-family:var(--disp);font-size:14px;color:var(--ink)}
+.wk-search input::placeholder{color:var(--grey)}
+.wk-search input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none;width:14px;height:14px;background:var(--mid);cursor:pointer;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E") center/contain no-repeat}
+.wk-preview{transition:opacity .3s}
+.wk-preview.is-empty{opacity:.3}
+.wk-count{margin:18px 0 8px;font-size:12.5px;color:var(--mid)}
+.wk-count b{font-weight:600;color:var(--ink)}
+.wk-count a{margin-inline-start:4px;font-weight:600;color:var(--teal)}
+.wk-count a:hover{color:var(--ink)}
+.wk-table{width:100%;border-collapse:collapse;font-size:13px}
+.wk-table th{padding:0 0 8px;border-bottom:1px solid var(--ink);font-size:11px;font-weight:600;color:var(--grey);text-align:start}
+.wk-table th:first-child{padding-inline-start:12px}
+.wk-table tr{position:relative}   /* each row is one link: the title's ::after covers the row */
+.wk-table td{padding:12px 0;border-bottom:1px solid var(--hair);vertical-align:baseline;transition:background-color .2s}
+.wk-table td.wk-n{position:relative;width:56px;padding-inline-start:12px;font-weight:600;color:var(--sand);font-variant-numeric:tabular-nums}
+.wk-n::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:2px;background:var(--sand);transform:scaleY(0);transition:transform .35s var(--ease-out)}
+.wk-type{width:100px;font-weight:600;color:var(--teal)}
+.wk-title a{font-size:15px;font-weight:600;line-height:1.5}
+.wk-title a::after{content:"";position:absolute;inset:0}
+.wk-title a:focus-visible{outline:0}
+.wk-author{width:160px;color:var(--mid)}
+.wk-year{width:52px;color:var(--grey);font-variant-numeric:tabular-nums}
+.wk-go{width:30px}
+.wk-go::before{content:"";display:block;width:16px;height:16px;margin-inline-start:auto;background:var(--teal);-webkit-mask:var(--arrow) center/contain no-repeat;mask:var(--arrow) center/contain no-repeat;opacity:0;transform:scaleX(calc(-1 * var(--dir)));transition:opacity .2s}
+.wk-table tbody tr:is(:hover,:focus-within,.is-previewed) td{background:var(--paper)}
+.wk-table tbody tr:is(:hover,:focus-within) :is(.wk-title a,.wk-n),.wk-table tbody tr.is-previewed .wk-n{color:var(--teal)}
+.wk-table tbody tr:is(:hover,:focus-within,.is-previewed) .wk-go::before{opacity:1}
+.wk-table tbody tr.is-previewed .wk-n::before{transform:none}
+.wk-table tbody tr:has(a:focus-visible){outline:2px solid var(--sand);outline-offset:-2px}
+.wk-empty{padding:26px 0;border-top:1px solid var(--hair);font-size:15px;color:var(--mid)}
+.wk-empty button{margin-inline-start:6px;padding:0 0 3px;border:0;border-bottom:2px solid var(--sand);background:none;font:inherit;font-size:14px;font-weight:600;color:var(--teal)}
+.wk-foot{display:flex;justify-content:space-between;align-items:baseline;gap:12px 24px;flex-wrap:wrap;margin-top:18px}
+@media (max-width:1023px){
+  .wk{grid-template-columns:200px minmax(0,1fr)}
+  .wk-author,.wk-table th:nth-child(4){display:none}
+}
+@media (max-width:767px){
+  .wk{grid-template-columns:minmax(0,1fr);gap:22px}
+  .wk-preview{position:static;display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;align-items:center}
+  .wk-preview__meta{margin-top:0}
+  .wk-card{justify-content:center;padding:10px}
+  .wk-card>:not(.wk-card__n){display:none}
+  .wk-card__n{margin:0;font-size:30px;text-align:center}
+  .wk-head{flex-direction:column;flex-wrap:nowrap;align-items:stretch}   /* a wrapping column sizes its line to the widest item */
+  .wk-years{flex-wrap:nowrap;overflow-x:auto;margin-inline:calc(-1 * var(--pad));padding:0 var(--pad) 4px;scrollbar-width:none}
+  .wk-years::-webkit-scrollbar{display:none}
+  .wk-search{flex:1 1 auto;min-width:0}
+  .wk-year,.wk-go,.wk-table th:nth-child(n+5){display:none}
+  .wk-type{width:76px}
+  .wk-table td.wk-n{width:44px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .wk-preview.is-swap .wk-preview__frame>*{animation:wk-in .5s var(--ease-out) both}
+  .wk-preview.is-swap .wk-preview__meta{animation:fade-in .4s var(--ease-out) both}
+}
+@keyframes wk-in{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}}   /* the board is lowered into its frame */
+
+/* 28. Home closing: عن وتد + السجل ---------------------------------------------
+   A statement, the meaning of the name, and three ways in; then the archive
+   on paper: every year with its weight (the bars grow in view, watad.js 12),
+   a month jump that reads as one control, and the numbered pages. */
+.wd-about{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--gap) calc(var(--gap) * 1.5);align-items:start}
+.wd-about>*{min-width:0}
+.wd-about__lead{max-width:17em;font-size:clamp(26px,2.9vw,40px);font-weight:700;line-height:1.45;text-wrap:balance}
+.wd-about__def{display:flex;gap:16px;align-items:flex-start;max-width:32em;margin-top:26px;padding-top:20px;border-top:1px solid var(--hair);font-family:var(--body);font-size:clamp(17px,1.5vw,19px);line-height:1.85;color:#3A3A40}
+.wd-about__def svg{flex:0 0 auto;margin-top:8px}
+.wd-about__def b{font-family:var(--disp);font-weight:700;color:var(--teal)}
+.wd-about__main .link-accent{margin-top:24px}
+.wd-about__pillars{margin:0;padding:0;list-style:none;border-top:2px solid var(--ink)}
+.wd-about__pillars a{display:grid;grid-template-columns:minmax(0,1fr) 22px;column-gap:18px;align-items:center;padding:20px 0 18px;border-bottom:1px solid var(--hair)}
+.wd-about__pillars b{font-size:19px;font-weight:700;line-height:1.4;transition:color .2s}
+.wd-about__pillars span{grid-column:1;margin-top:5px;font-family:var(--body);font-size:16px;line-height:1.8;color:#3A3A40}
+.go{grid-column:2;grid-row:1/span 2;display:block;width:20px;height:20px;background:var(--sand);-webkit-mask:var(--arrow) center/contain no-repeat;mask:var(--arrow) center/contain no-repeat;transform:scaleX(calc(-1 * var(--dir)));transition:background-color .2s,translate .45s var(--ease-out)}
+.wd-about__pillars a:hover b{color:var(--teal)}
+.wd-about__pillars a:hover .go{background:var(--teal)}
+.wd-rec{position:relative;z-index:1;background:var(--paper)}
+.wd-rec__head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px 48px;align-items:end;padding-bottom:28px;border-bottom:2px solid var(--ink)}
+.wd-rec__title{max-width:16em;font-size:clamp(22px,2.3vw,32px);font-weight:700;line-height:1.5;text-wrap:balance}
+.wd-jump{display:grid;gap:8px}
+.wd-jump__label{font-size:12px;font-weight:600;color:var(--teal)}
+.wd-jump__ctl{display:flex;height:48px;border:1px solid var(--ink);background:#fff}
+.wd-jump__ctl:focus-within{outline:2px solid var(--sand);outline-offset:2px}
+.wd-jump__ctl select{min-width:0;height:100%;padding:0 14px;border:0;border-inline-end:1px solid var(--hair);background:#fff;font-family:var(--disp);font-size:14px;color:var(--ink);cursor:pointer}
+.wd-jump__ctl select:focus-visible{outline:0;background:var(--paper)}
+.wd-jump__ctl .btn{height:100%;padding:0 26px;border:0}
+.wd-jump__ctl .btn:focus-visible{outline:0;background:#093C47}
+.wd-years{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));column-gap:18px;margin:0;padding:0;list-style:none}
+.wd-years>*{min-width:0}
+.wd-years a{display:block;padding:22px 0 18px;border-bottom:1px solid #D8DBDB}
+.wd-years b{display:block;font-size:26px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;transition:color .2s}
+.wd-years span{display:block;margin-top:8px;font-size:12px;color:var(--mid)}
+.wd-years i{position:relative;display:block;height:3px;margin-top:14px;background:#E0E3E3}
+.wd-years i::after{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:var(--w);background:var(--sand);transform-origin:var(--start) center;transition:background-color .2s}
+.wd-years a:hover b{color:var(--teal)}
+.wd-years a:hover i::after{background:var(--teal)}
+.wd-rec__foot{display:flex;justify-content:space-between;align-items:center;gap:16px 28px;flex-wrap:wrap;margin-top:30px}
+.wd-rec__foot .meta b{font-weight:600}
+@media (max-width:1023px){
+  .wd-about,.wd-rec__head{grid-template-columns:minmax(0,1fr)}
+  .wd-years{grid-template-columns:repeat(4,minmax(0,1fr));row-gap:4px}
+}
+@media (max-width:767px){
+  .wd-jump__ctl select{flex:1 1 0;padding:0 10px;font-size:13px}
+  .wd-jump__ctl .btn{padding:0 18px}
+  .wd-years{column-gap:14px}
+  .wd-years b{font-size:20px}
+}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  .wd-about__pillars a:hover .go{translate:calc(6px * var(--dir)) 0}
+}
+@media (prefers-reduced-motion:no-preference){
+  [data-grow].is-waiting:not(.is-in) i::after{transform:scaleX(0)}   /* .is-waiting stays on; the bars must not fall back to 0 after growing */
+  [data-grow].is-in i::after{animation:bar-grow 1s var(--ease-out) backwards;animation-delay:calc(var(--i, 0) * 60ms + 100ms)}
+}
+
+/* 29. Footer (colophon) -----------------------------------------------------------
+   Aligned to the rail. The axis runs on into the footer and ends on the base
+   row's ground line, where the sand quote-wedge is planted (it drops in when
+   it scrolls into view, watad.js 12). */
+.site-footer{position:relative;z-index:1;background:var(--teal);color:var(--on-dark)}
+.site-footer__part{position:relative}
+.site-footer .axis{background:var(--axis-dark)}
+.site-footer__main{padding:60px 0 52px}
+.site-footer__logo{display:block;line-height:0}
+.site-footer__logo svg{width:100%;max-width:158.6px;height:auto}
+.site-footer__tag{margin-top:16px;font-family:var(--body);font-size:18px;line-height:1.6;color:#CFD9DA}
+.site-footer__cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px var(--gap)}
+.site-footer__cols>*{min-width:0}
+.site-footer__col h2{margin-bottom:8px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.22);font-size:12.5px;font-weight:600;line-height:1.5;color:var(--sand)}
+.site-footer__col ul{margin:0;padding:0;list-style:none}
+.site-footer__col li a{display:inline-block;padding:6px 0;font-size:14.5px;color:var(--on-dark)}
+.site-footer__col li a:hover{color:#fff}
+.site-footer__follow .social{margin-top:14px}
+.site-footer__follow p{margin-top:14px;font-size:12.5px;line-height:1.7;color:var(--on-dark-2)}
+.social--dark a{border-color:rgba(255,255,255,.3);color:#fff}
+.social--dark a:hover{background:var(--sand);border-color:var(--sand);color:var(--teal)}
+.site-footer__base{border-top:1px solid rgba(255,255,255,.2)}
+.site-footer__end{top:-12px}   /* straddles the ground line */
+.site-footer__legal{display:flex;justify-content:space-between;align-items:center;gap:10px 24px;flex-wrap:wrap;padding:20px 0 24px;font-size:12px;color:var(--on-dark-2)}
+.site-footer__up{display:inline-flex;align-items:center;gap:8px;min-height:40px;font-size:12.5px;font-weight:600;color:#fff}
+.site-footer__up svg{width:16px;height:16px;transition:translate .35s var(--ease-out)}
+.site-footer__up:hover{color:var(--sand)}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){.site-footer__up:hover svg{translate:0 -3px}}
+@media (max-width:1023px){
+  .site-footer__main{padding:44px 0 36px;row-gap:28px}
+  .site-footer__cols{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .site-footer__base{row-gap:0}
+}
+@media (max-width:767px){.site-footer__follow{grid-column:1/-1}}
