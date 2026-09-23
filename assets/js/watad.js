@@ -19,6 +19,50 @@
     els.forEach(function (el) { if (el && el.animate) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: EASE_OUT }); });
   }
 
+  /* Results glide from where they were to where they land, after a view
+     switch or a filter, matched by data-item (each view holds its own copy).
+     Transform only, so it never blocks the next click; what had no place
+     before, or would travel more than a screen, fades in instead. */
+  function places(box) {
+    var m = {};
+    $$('[data-item]', box).forEach(function (el) { if (el.getAttribute('data-hidden') !== 'true' && el.getClientRects().length) m[el.getAttribute('data-item')] = el.getBoundingClientRect(); });
+    return m;
+  }
+  function glide(box, before) {
+    if (reduced.matches) return;
+    var rtl = document.documentElement.getAttribute('dir') === 'rtl', vh = window.innerHeight, fresh = [];
+    $$('[data-item]', box).forEach(function (el) {
+      if (el.getAttribute('data-hidden') === 'true' || !el.getClientRects().length) return;
+      var o = before[el.getAttribute('data-item')], n = el.getBoundingClientRect();
+      if (n.bottom < 0 || n.top > vh) return;   // off screen: nothing to see
+      var dx = o ? (rtl ? o.right - n.right : o.left - n.left) : 0, dy = o ? o.top - n.top : 0;
+      if (!o || Math.abs(dy) > vh) { fresh.push(el); return; }
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      if (el.animate) el.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)', opacity: .5 }, { transform: 'none', opacity: 1 }], { duration: 560, easing: EASE_OUT });
+    });
+    reveal(fresh);
+  }
+
+  /* One sand line under the chosen tab, sliding from tab to tab. It follows
+     the .tab.is-active in box; call the returned function after changing it. */
+  function tabInk(box) {
+    var ink = document.createElement('i');
+    ink.className = 'tabs__ink'; ink.setAttribute('aria-hidden', 'true');
+    box.appendChild(ink); box.classList.add('has-ink');
+    function move() {
+      var on = $('.tab.is-active', box);
+      if (!on) return;
+      var r = on.getBoundingClientRect(), p = box.getBoundingClientRect();
+      ink.style.setProperty('--w', r.width + 'px');
+      ink.style.setProperty('--x', (r.left - p.left + box.scrollLeft) + 'px');
+    }
+    window.addEventListener('resize', move);
+    // tabs change width when their web font arrives, which fonts.ready alone can miss (WebKit), and in
+    // right-to-left a row that changes width moves every tab in it, so the row is watched as well
+    if ('ResizeObserver' in window) { var ro = new ResizeObserver(function () { move(); }); ro.observe(box); $$('.tab', box).forEach(function (t) { ro.observe(t); }); }
+    return move;
+  }
+
   /* Keep Tab inside an open dialog */
   function trapFocus(box, e) {
     if (e.key !== 'Tab') return;
@@ -100,8 +144,9 @@
       b.addEventListener('click', function () {
         var v = b.getAttribute('data-view-btn');
         if (box.getAttribute('data-view') === v) return;
+        var before = places(box);
         show(v);
-        reveal([$('.res-' + v, box)]);
+        glide(box, before);
         var u = new URL(location.href); u.searchParams.set('view', v); history.replaceState(null, '', u);
       });
     });
@@ -120,17 +165,21 @@
     var opts = $$('[data-facet]', root);
     var countEl = $('[data-result-count]');
     var empty = $('[data-filter-empty]');
+    var box = $('[data-results]');
     function apply() {
-      var shown = 0, seen = {}, back = [];
+      var shown = 0, seen = {}, back = [], before = box ? places(box) : {};
       items.forEach(function (it) {
         var ok = Object.keys(state).every(function (k) { return !state[k] || it.getAttribute('data-' + k) === state[k]; });
-        if (ok && it.getAttribute('data-hidden') === 'true') back.push(it);
         it.setAttribute('data-hidden', ok ? 'false' : 'true');
         var id = it.getAttribute('data-item');
         if (ok && !seen[id]) { seen[id] = 1; shown++; }
       });
-      if (countEl) countEl.textContent = shown;
+      if (countEl && countEl.textContent !== String(shown)) {
+        countEl.textContent = shown;
+        if (!reduced.matches && countEl.animate) countEl.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: EASE_OUT });
+      }
       if (empty) { var was = empty.hidden; empty.hidden = shown !== 0; if (was && !empty.hidden) back.push(empty); }
+      if (box) glide(box, before);
       reveal(back);
     }
     function mark(x, on) { x.classList.toggle('is-active', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); }
@@ -572,15 +621,18 @@
   }
 
   /* 20. Archive by date -------------------------------------------------------
-     Year tabs switch the month grid in place. A month (from the grid, the
-     jump form or ?y=&m=) is underlined, titled with its count, and its group
-     on the page is opened and brought into view. On the server the same
-     ?y=&m= renders that month; the static demo only holds Sep–Jul 2026. */
+     Year tabs switch the month grid in place, under a sliding sand line, and
+     the months step in. A month (from the grid, the jump form or ?y=&m=) is
+     underlined, titled with its count, and its group on the page is opened
+     and brought into view. Links marked [data-year-jump] (the years band)
+     open their year here. On the server the same ?y=&m= renders that month;
+     the static demo only holds Sep–Jul 2026. */
   function archiveNav() {
     var root = $('[data-arcal]');
     if (!root) return;
     var tabsEls = $$('[data-year]', root), grids = $$('[data-year-grid]', root);
-    function showYear(y) {
+    var years = $('.arcal__years', root), moveInk = years ? tabInk(years) : function () {};
+    function showYear(y, animate) {
       var hit = grids.filter(function (g) { return g.getAttribute('data-year-grid') === String(y); })[0];
       if (!hit) return false;
       grids.forEach(function (g) { g.hidden = g !== hit; });
@@ -589,14 +641,27 @@
         t.classList.toggle('is-active', on);
         if (on) t.setAttribute('aria-current', 'true'); else t.removeAttribute('aria-current');
       });
+      moveInk();
+      if (animate && !reduced.matches) $$('.arcal__m', hit).forEach(function (c, i) {
+        if (c.animate) c.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: i * 28, easing: EASE_OUT, fill: 'backwards' });
+      });
+      return true;
+    }
+    function pick(y) {
+      if (!showYear(y, true)) return false;
+      var u = new URL(location.href); u.searchParams.set('y', y); u.searchParams.delete('m'); history.replaceState(null, '', u);
       return true;
     }
     tabsEls.forEach(function (t) {
-      t.addEventListener('click', function (e) {
+      t.addEventListener('click', function (e) { e.preventDefault(); pick(t.getAttribute('data-year')); });
+    });
+    $$('[data-year-jump]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        if (!pick(a.getAttribute('data-year-jump'))) return;   // a year the page does not hold: follow the link
         e.preventDefault();
-        var y = t.getAttribute('data-year');
-        if (!showYear(y)) return;
-        var u = new URL(location.href); u.searchParams.set('y', y); u.searchParams.delete('m'); history.replaceState(null, '', u);
+        (root.closest('.section') || root).scrollIntoView({ behavior: reduced.matches ? 'auto' : 'smooth', block: 'start' });
+        var t = $('.tab.is-active', root);
+        if (t) t.focus({ preventScroll: true });
       });
     });
     var q = new URL(location.href).searchParams, y = parseInt(q.get('y'), 10), m = parseInt(q.get('m'), 10);
@@ -865,9 +930,10 @@
   }
 
   /* 25. Ink: the thesis and the closing line darken word by word as they are
-     read. Plain-text [data-ink] paragraphs are split into words; the scroll
-     drives them where the browser has view timelines, and they fade in turn
-     as the paragraph arrives elsewhere. */
+     read. [data-ink] paragraphs are split into words, inside any inline
+     element they hold (a phrase in sand stays in sand); the scroll drives
+     them where the browser has view timelines, and they fade in turn as the
+     paragraph arrives elsewhere. */
   function inkWords() {
     var els = $$('[data-ink]');
     if (!els.length || reduced.matches) return;
@@ -875,17 +941,26 @@
     var io = !timeline && 'IntersectionObserver' in window ? new IntersectionObserver(function (es) {
       es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
     }, { rootMargin: '0px 0px -25% 0px' }) : null;
-    els.forEach(function (el) {
-      if (el.children.length) return;
-      var words = el.textContent.trim().split(/\s+/);
-      el.textContent = '';
-      words.forEach(function (w, i) {
-        var s = document.createElement('span');
-        s.className = 'iw'; s.style.setProperty('--i', i); s.textContent = w;
-        el.appendChild(s);
-        if (i < words.length - 1) el.appendChild(document.createTextNode(' '));
+    function split(node, n) {
+      Array.prototype.slice.call(node.childNodes).forEach(function (ch) {
+        if (ch.nodeType === 1) { split(ch, n); return; }
+        if (ch.nodeType !== 3) return;
+        var frag = document.createDocumentFragment();
+        ch.nodeValue.split(/(\s+)/).forEach(function (part) {
+          if (!part) return;
+          if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); return; }
+          var s = document.createElement('span');
+          s.className = 'iw'; s.style.setProperty('--i', n.i++); s.textContent = part;
+          frag.appendChild(s);
+        });
+        node.replaceChild(frag, ch);
       });
-      el.style.setProperty('--n', words.length);
+    }
+    els.forEach(function (el) {
+      if (el.querySelector('.iw')) return;
+      var n = { i: 0 };
+      split(el, n);
+      el.style.setProperty('--n', n.i);
       if (timeline) el.classList.add('is-inked');
       else if (io) { el.classList.add('is-inked-io'); io.observe(el); }
     });
@@ -1017,91 +1092,246 @@
     });
   }
 
-  /* 30. Author works: filter, sort and page in place (demo) -------------------
-     [data-works] holds [data-works-filter] tabs, [data-works-sort] chips, the
-     rows li[data-section][data-date] and a [data-works-pager]; eight rows a
-     page. The chosen tab is underlined by one sand line that slides between
-     tabs. The state is kept in ?section=&sort=&page=, which is also what the
-     server should read when the list is real. */
+  /* 30. Lists that filter, sort and page in place (demo) ------------------------
+     [data-works] holds [data-works-filter] tabs, optional [data-works-sort]
+     chips, a [data-works-list] of rows with data-date and the attribute named
+     by data-works-by ("section" unless set), and an optional [data-works-pager].
+     data-works-per sets the rows a page, 8 unless set; 0 leaves paging to the
+     server and its own pager. The chosen tab is underlined by one sand line
+     that slides between tabs. The state is kept in ?section= (or ?type= …)
+     &sort=&page=, which is also what the server should read when the list is
+     real; tabs may be links to that address, and then work without script.
+     Blocks marked [data-works-all] show only while no filter is on: an
+     editors' pick between the tabs and the list steps aside so the result sits
+     under the tabs, and the server's pager for the whole section goes with it. */
   function worksList() {
-    var root = $('[data-works]');
-    if (!root) return;
-    var list = $('[data-works-list]', root), rows = $$('li[data-date]', list), tabsBox = $('.works-tabs', root);
-    var filters = $$('[data-works-filter]', root), sorts = $$('[data-works-sort]', root);
-    var pager = $('[data-works-pager]', root), countEl = $('[data-works-count]', root);
-    if (!list || !rows.length) return;
-    var PER = 8, q = new URL(location.href).searchParams;
-    var state = { section: q.get('section') || '', sort: q.get('sort') === 'old' ? 'old' : 'new', page: Math.max(1, parseInt(q.get('page'), 10) || 1) };
-    var amount = function (n) { return n === 1 ? 'مادة واحدة' : n === 2 ? 'مادتان' : n <= 10 ? n + ' مواد' : n + ' مادة'; };
+    $$('[data-works]').forEach(function (root) {
+      var list = $('[data-works-list]', root), rows = list ? $$(':scope > [data-date]', list) : [], tabsBox = $('.works-tabs', root);
+      var filters = $$('[data-works-filter]', root), sorts = $$('[data-works-sort]', root);
+      var pager = $('[data-works-pager]', root), countEl = $('[data-works-count]', root), leads = $$('[data-works-all]', root);
+      if (!rows.length) return;
+      var BY = root.getAttribute('data-works-by') || 'section';
+      var PER = parseInt(root.getAttribute('data-works-per') || '8', 10) || 0, q = new URL(location.href).searchParams;
+      var valid = function (v) { return filters.some(function (b) { return (b.getAttribute('data-works-filter') || '') === v; }); };
+      var state = { key: valid(q.get(BY) || '') ? q.get(BY) || '' : '', sort: q.get('sort') === 'old' ? 'old' : 'new', page: PER ? Math.max(1, parseInt(q.get('page'), 10) || 1) : 1 };
+      var amount = function (n) { return n === 1 ? 'مادة واحدة' : n === 2 ? 'مادتان' : n <= 10 ? n + ' مواد' : n + ' مادة'; };
+      var here = location.pathname.split('/').pop() || 'index.html';
 
-    var ink = null;
-    if (tabsBox) {
-      ink = document.createElement('i'); ink.className = 'tabs__ink'; ink.setAttribute('aria-hidden', 'true');
-      tabsBox.appendChild(ink); tabsBox.classList.add('has-ink');
-    }
-    function moveInk() {
-      var on = filters.filter(function (b) { return b.classList.contains('is-active'); })[0];
-      if (!ink || !on) return;
-      var r = on.getBoundingClientRect(), p = tabsBox.getBoundingClientRect();
-      ink.style.setProperty('--w', r.width + 'px');
-      ink.style.setProperty('--x', (r.left - p.left + tabsBox.scrollLeft) + 'px');
-    }
-    function link(label, page, cls, current) {
-      var a = document.createElement('a');
-      a.href = 'author.html?page=' + page; a.textContent = label; a.setAttribute('data-page', page);
-      if (cls) a.className = cls;
-      if (current) a.setAttribute('aria-current', 'page');
-      return a;
-    }
-    function buildPager(pages) {
-      if (!pager) return;
-      pager.textContent = '';
-      if (state.page > 1) pager.appendChild(link('السابق', state.page - 1, 'pager__prev'));
-      else { var d = document.createElement('span'); d.className = 'pager__prev'; d.setAttribute('aria-disabled', 'true'); d.textContent = 'السابق'; pager.appendChild(d); }
-      for (var i = 1; i <= pages; i++) pager.appendChild(link(String(i), i, '', i === state.page));
-      if (state.page < pages) pager.appendChild(link('التالي', state.page + 1, 'pager__next'));
-      var info = document.createElement('span'); info.className = 'pager__info'; info.textContent = 'الصفحة ' + state.page + ' من ' + pages;
-      pager.appendChild(info);
-    }
-    function render(animate, scroll) {
-      var pool = rows.filter(function (r) { return !state.section || r.getAttribute('data-section') === state.section; });
-      pool.sort(function (a, b) { var x = a.getAttribute('data-date'), y = b.getAttribute('data-date'); return (x < y ? 1 : x > y ? -1 : 0) * (state.sort === 'new' ? 1 : -1); });
-      var pages = Math.max(1, Math.ceil(pool.length / PER));
-      state.page = Math.min(state.page, pages);
-      var shown = pool.slice((state.page - 1) * PER, state.page * PER);
-      pool.forEach(function (r) { list.appendChild(r); });
-      rows.forEach(function (r) { r.setAttribute('data-hidden', shown.indexOf(r) === -1 ? 'true' : 'false'); });
-      filters.forEach(function (b) { var on = (b.getAttribute('data-works-filter') || '') === state.section; b.classList.toggle('is-active', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
-      sorts.forEach(function (b) { var on = b.getAttribute('data-works-sort') === state.sort; b.classList.toggle('is-active', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
-      if (countEl) countEl.textContent = amount(pool.length);
-      buildPager(pages);
-      moveInk();
-      if (animate && !reduced.matches) shown.forEach(function (r, i) {
-        if (r.animate) r.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: i * 45, easing: EASE_OUT, fill: 'backwards' });
+      var moveInk = tabsBox ? tabInk(tabsBox) : function () {};
+      function mark(b, on) {
+        b.classList.toggle('is-active', on);
+        if (b.tagName === 'A') { if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); }
+        else b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+      function link(label, page, cls, current) {
+        var a = document.createElement('a'), u = new URL(location.href);
+        u.searchParams.set('page', page);
+        a.href = here + u.search; a.textContent = label; a.setAttribute('data-page', page);
+        if (cls) a.className = cls;
+        if (current) a.setAttribute('aria-current', 'page');
+        return a;
+      }
+      function buildPager(pages) {
+        if (!pager || !PER) return;
+        pager.textContent = '';
+        if (state.page > 1) pager.appendChild(link('السابق', state.page - 1, 'pager__prev'));
+        else { var d = document.createElement('span'); d.className = 'pager__prev'; d.setAttribute('aria-disabled', 'true'); d.textContent = 'السابق'; pager.appendChild(d); }
+        for (var i = 1; i <= pages; i++) pager.appendChild(link(String(i), i, '', i === state.page));
+        if (state.page < pages) pager.appendChild(link('التالي', state.page + 1, 'pager__next'));
+        var info = document.createElement('span'); info.className = 'pager__info'; info.textContent = 'الصفحة ' + state.page + ' من ' + pages;
+        pager.appendChild(info);
+      }
+      function render(animate, scroll) {
+        var pool = rows.filter(function (r) { return !state.key || r.getAttribute('data-' + BY) === state.key; });
+        pool.sort(function (a, b) { var x = a.getAttribute('data-date'), y = b.getAttribute('data-date'); return (x < y ? 1 : x > y ? -1 : 0) * (state.sort === 'new' ? 1 : -1); });
+        var pages = PER ? Math.max(1, Math.ceil(pool.length / PER)) : 1;
+        state.page = Math.min(state.page, pages);
+        var shown = PER ? pool.slice((state.page - 1) * PER, state.page * PER) : pool;
+        pool.forEach(function (r) { list.appendChild(r); });
+        rows.forEach(function (r) { r.setAttribute('data-hidden', shown.indexOf(r) === -1 ? 'true' : 'false'); });
+        filters.forEach(function (b) { mark(b, (b.getAttribute('data-works-filter') || '') === state.key); });
+        sorts.forEach(function (b) { mark(b, b.getAttribute('data-works-sort') === state.sort); });
+        if (countEl) countEl.textContent = amount(pool.length);
+        leads.forEach(function (el) {
+          var was = el.getAttribute('data-hidden') === 'true';
+          el.setAttribute('data-hidden', state.key ? 'true' : 'false');
+          if (was && !state.key && animate) reveal([el]);
+        });
+        buildPager(pages);
+        moveInk();
+        if (animate && !reduced.matches) shown.forEach(function (r, i) {
+          r.classList.add('is-in');   // a filtered row is shown now, whatever the scroll reveal was waiting for
+          if (r.animate) r.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: Math.min(i, 8) * 45, easing: EASE_OUT, fill: 'backwards' });
+        });
+        var u = new URL(location.href);
+        [[BY, state.key], ['sort', state.sort === 'new' ? '' : 'old'], ['page', PER && state.page > 1 ? state.page : '']].forEach(function (kv) {
+          if (kv[1]) u.searchParams.set(kv[0], kv[1]); else u.searchParams.delete(kv[0]);
+        });
+        history.replaceState(null, '', u);
+        if (scroll) (list.closest('.section') || root).scrollIntoView({ behavior: reduced.matches ? 'auto' : 'smooth', block: 'start' });
+      }
+      filters.forEach(function (b) {
+        b.addEventListener('click', function (e) {
+          e.preventDefault();
+          var v = b.getAttribute('data-works-filter') || '';
+          if (v === state.key) return;
+          state.key = v; state.page = 1; render(true, false);
+        });
       });
-      var u = new URL(location.href);
-      [['section', state.section], ['sort', state.sort === 'new' ? '' : 'old'], ['page', state.page > 1 ? state.page : '']].forEach(function (kv) {
-        if (kv[1]) u.searchParams.set(kv[0], kv[1]); else u.searchParams.delete(kv[0]);
+      sorts.forEach(function (b) { b.addEventListener('click', function () { if (state.sort === b.getAttribute('data-works-sort')) return; state.sort = b.getAttribute('data-works-sort'); state.page = 1; render(true, false); }); });
+      if (pager && PER) pager.addEventListener('click', function (e) {
+        var a = e.target.closest('[data-page]');
+        if (!a) return;
+        e.preventDefault();
+        state.page = parseInt(a.getAttribute('data-page'), 10) || 1;
+        render(true, true);
       });
-      history.replaceState(null, '', u);
-      if (scroll) root.scrollIntoView({ behavior: reduced.matches ? 'auto' : 'smooth', block: 'start' });
-    }
-    filters.forEach(function (b) { b.addEventListener('click', function () { state.section = b.getAttribute('data-works-filter') || ''; state.page = 1; render(true, false); }); });
-    sorts.forEach(function (b) { b.addEventListener('click', function () { if (state.sort === b.getAttribute('data-works-sort')) return; state.sort = b.getAttribute('data-works-sort'); state.page = 1; render(true, false); }); });
-    if (pager) pager.addEventListener('click', function (e) {
-      var a = e.target.closest('[data-page]');
-      if (!a) return;
-      e.preventDefault();
-      state.page = parseInt(a.getAttribute('data-page'), 10) || 1;
-      render(true, true);
+      render(false, false);
     });
-    window.addEventListener('resize', moveInk);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveInk);
-    render(false, false);
+  }
+
+  /* 31. Lists arrive: rows and cards below the fold rise into place as they
+     reach the reader, a beat apart when several come in together. Children of
+     [data-arrive]; nothing is hidden unless this has run. */
+  function arrive() {
+    if (reduced.matches || !('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function (es) {
+      var k = 0;
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.style.setProperty('--k', Math.min(k++, 6));
+        e.target.classList.add('is-in');
+        io.unobserve(e.target);
+      });
+    }, { rootMargin: '0px 0px -6% 0px' });
+    var fold = window.innerHeight, items = [];
+    $$('[data-arrive]').forEach(function (box) { items = items.concat(Array.prototype.slice.call(box.children)); });
+    // every read first, then every write, so the page lays out once
+    items.filter(function (el) { return el.getClientRects().length && el.getBoundingClientRect().top >= fold; })
+      .forEach(function (el) { el.classList.add('is-waiting'); io.observe(el); });
+  }
+
+  /* 32. Search: the words searched for are marked in the results -----------------
+     Titles and deks under [data-results] get <mark class="hit"> around each
+     word of the query (?q=, or the page's own), with أ/إ/آ, ة/ه and ى/ي
+     matching each other. The server can print the same marks instead. */
+  function hits() {
+    var box = $('[data-results]');
+    if (!box) return;
+    var h = $('h1[data-query]'), q = new URL(location.href).searchParams.get('q') || (h ? h.textContent : '');
+    var FOLD = { 'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ة': 'ه', 'ى': 'ي', 'ؤ': 'و', 'ئ': 'ي' };
+    var fold = function (s) { return s.replace(/[أإآةىؤئ]/g, function (c) { return FOLD[c]; }); };   // one letter for one, so positions hold
+    var words = fold(q.trim()).split(/\s+/).filter(function (w) { return w.length > 1; });
+    if (!words.length) return;
+    var re = new RegExp(words.map(function (w) { return w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|'), 'g');
+    $$('.story__title, .dek', box).forEach(function (el) {
+      var walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), nodes = [];
+      while (walk.nextNode()) nodes.push(walk.currentNode);
+      nodes.forEach(function (node) {
+        var text = node.nodeValue, f = fold(text), m, last = 0, frag = null;
+        re.lastIndex = 0;
+        while ((m = re.exec(f))) {
+          frag = frag || document.createDocumentFragment();
+          if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+          var mark = document.createElement('mark');
+          mark.className = 'hit'; mark.textContent = text.slice(m.index, m.index + m[0].length);
+          frag.appendChild(mark);
+          last = m.index + m[0].length;
+        }
+        if (!frag) return;
+        if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+      });
+    });
+  }
+
+  /* 33. خبر وتعليق: the days beside the timeline ------------------------------------
+     [data-tl-days] links to each day (li.tl__day[id]). The day whose posts
+     cross the middle of the screen is marked; a click glides to that day's
+     first post, clear of the sticky header and the day label. */
+  function newsDays() {
+    var nav = $('[data-tl-days]');
+    if (!nav) return;
+    var links = $$('a[href^="#"]', nav), items = $$('.tl__item');
+    var dayOf = function (it) { for (var n = it.previousElementSibling; n; n = n.previousElementSibling) if (n.classList.contains('tl__day')) return n.id; return ''; };
+    function mark(id) {
+      if (!id) return;
+      links.forEach(function (a) {
+        var on = a.getAttribute('href') === '#' + id;
+        a.classList.toggle('is-active', on);
+        if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+      });
+    }
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) mark(dayOf(e.target)); });
+      }, { rootMargin: '-38% 0px -58% 0px' });
+      items.forEach(function (it) { io.observe(it); });
+    }
+    links.forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        var day = document.getElementById(a.getAttribute('href').slice(1)), first = day && day.nextElementSibling;
+        if (!first) return;
+        e.preventDefault();
+        var head = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick-h')) || 46;
+        window.scrollTo({ top: first.getBoundingClientRect().top + window.pageYOffset - head - day.offsetHeight - 18, behavior: reduced.matches ? 'auto' : 'smooth' });
+        mark(day.id);
+        history.replaceState(null, '', '#' + day.id);   // replace, not assign: a hash change would reach the post popup
+      });
+    });
+  }
+
+  /* 34. About: the mark, part by part ----------------------------------------------
+     Pointing at (or focusing) a [data-part] beside the logo sets data-show on
+     .ab-mark, and CSS brings that part forward while the rest steps back. */
+  function markParts() {
+    $$('.ab-mark').forEach(function (m) {
+      $$('[data-part]', m).forEach(function (el) {
+        var on = function () { m.setAttribute('data-show', el.getAttribute('data-part')); };
+        var off = function () { if (m.getAttribute('data-show') === el.getAttribute('data-part')) m.removeAttribute('data-show'); };
+        el.addEventListener('pointerenter', on); el.addEventListener('pointerleave', off);
+        el.addEventListener('focus', on); el.addEventListener('blur', off);
+      });
+    });
+  }
+
+  /* 35. Writers: find a writer by name or field as you type ---------------------------
+     [data-writers] holds a [data-writers-search] input and cards [data-writer]
+     (name and field). أ/إ/آ, ة/ه and ى/ي match each other and short vowels are
+     ignored; [data-writers-count] and [data-writers-empty] follow the result. */
+  function writersFind() {
+    $$('[data-writers]').forEach(function (root) {
+      var input = $('[data-writers-search]', root), cards = $$('[data-writer]', root);
+      var count = $('[data-writers-count]', root), empty = $('[data-writers-empty]', root);
+      if (!input || !cards.length) return;
+      var FOLD = { 'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ة': 'ه', 'ى': 'ي', 'ؤ': 'و', 'ئ': 'ي' };
+      var norm = function (s) { return s.replace(/[ً-ْ]/g, '').replace(/[أإآةىؤئ]/g, function (c) { return FOLD[c]; }); };
+      var label = function (n) { return n === 1 ? 'كاتب واحد' : n === 2 ? 'كاتبان' : n <= 10 ? n + ' كتاب' : n + ' كاتبا'; };
+      var keys = cards.map(function (c) { return norm(c.getAttribute('data-writer')); });
+      function apply() {
+        var q = norm(input.value.trim()), n = 0, back = [];
+        cards.forEach(function (c, i) {
+          var ok = !q || keys[i].indexOf(q) !== -1;
+          if (ok && c.getAttribute('data-hidden') === 'true') back.push(c);
+          c.setAttribute('data-hidden', ok ? 'false' : 'true');
+          if (ok) { n++; c.classList.add('is-in'); }
+        });
+        if (count) count.textContent = q ? label(n) + ' من ' + cards.length : label(n);
+        if (empty) empty.hidden = n !== 0;
+        reveal(back);
+      }
+      input.addEventListener('input', apply);
+      input.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape' || !input.value) return;
+        e.preventDefault(); e.stopPropagation();   // the first Escape clears the search, it does not close the popup
+        input.value = ''; apply();
+      });
+      $$('[data-writers-clear]', root).forEach(function (b) { b.addEventListener('click', function () { input.value = ''; apply(); input.focus(); }); });
+    });
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    [query, stickyHeader, drawer, searchOverlay, views, facets, tabs, chips, months, toc, follow, boards, plant, images, progress, ticker, dialogs, newsModal, copyLinks, archiveNav, archiveFilter, wikiRegister, axisFill, counters, inkWords, cites, quoteShare, timeLeft, shareLinks, worksList].forEach(function (fn) {
+    [query, stickyHeader, drawer, searchOverlay, views, facets, tabs, chips, months, toc, follow, boards, plant, images, progress, ticker, dialogs, newsModal, copyLinks, archiveNav, archiveFilter, wikiRegister, axisFill, counters, inkWords, cites, quoteShare, timeLeft, shareLinks, worksList, hits, newsDays, markParts, writersFind, arrive].forEach(function (fn) {
       try { fn(); } catch (err) { if (window.console) console.error(err); }   // one broken block must not take the rest down
     });
   });

@@ -1432,8 +1432,9 @@ a.arcal__m:hover .arcal__bar::after{background:var(--teal)}
 .works-bar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px 24px;flex-wrap:wrap;border-bottom:1px solid var(--hair)}
 .works-tabs{position:relative;border-bottom:0}
 .tabs__ink{position:absolute;bottom:0;left:0;width:var(--w,0);height:2px;background:var(--sand);transform:translateX(var(--x,0));pointer-events:none}
-.works-tabs.has-ink .tab.is-active{border-bottom-color:transparent}
-.works-tabs.has-ink .tab.is-active::after{display:none}
+.tabs.has-ink{position:relative}   /* any tab row with the sliding line (watad.js tabInk): archive years, category types, author works */
+.has-ink .tab.is-active{border-bottom-color:transparent}
+.has-ink .tab.is-active::after{display:none}
 .works-sort{padding-bottom:12px}
 .works{margin:0;padding:0;list-style:none;border-top:1px solid var(--ink)}
 .work{position:relative;display:grid;grid-template-columns:96px minmax(0,1fr) 80px 24px;column-gap:24px;align-items:baseline;padding:20px 0;border-bottom:1px solid var(--hair)}
@@ -1469,3 +1470,268 @@ a.arcal__m:hover .arcal__bar::after{background:var(--teal)}
 @keyframes wedge-rise{from{background-position:50% 175%}}
 @keyframes figure-rise{from{opacity:0;transform:translateY(10%)}}
 @keyframes grow-y{from{transform:scaleY(0)}}
+
+/* 33. Lists arrive (watad.js 31) --------------------------------------------------------
+   Rows and cards below the fold rise into place as the reader reaches them,
+   a beat apart when several come in together. */
+@media (prefers-reduced-motion:no-preference){
+  [data-arrive]>.is-waiting:not(.is-in){opacity:0}
+  [data-arrive]>.is-waiting.is-in{animation:rise .8s var(--ease-out) backwards;animation-delay:calc(var(--k,0) * 80ms)}
+}
+@media print{[data-arrive]>*{opacity:1!important;animation:none!important}}
+
+/* 34. Category page -----------------------------------------------------------------------
+   Arrival: the section's title tile is raised into place, its lettering
+   settles and the sharp angle cuts in, the rule under the head is drawn
+   and the editors' pick is uncovered. The type tabs filter the list in
+   place under one sliding sand line (watad.js 30). A piece without a picture
+   shows its writer on the teal tile, the Watad mark for the editorial board,
+   or its section's artwork. */
+.cat-head .body{position:relative;border-bottom:0;padding-bottom:2px}
+.cat-head .body::after{content:"";position:absolute;inset-inline:0;bottom:0;height:2px;background:var(--ink);transform-origin:var(--start) center}
+.cat-head__info .meta [data-count]{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.aitem__thumb{outline:1px solid transparent;outline-offset:0;transition:outline-color .3s,outline-offset .5s var(--ease-out)}
+.aitem__thumb--writer{position:relative;background:#0A4450 url(../img/brand/wedge-quote.svg) no-repeat 50% 135%/84% auto}
+.aitem__thumb--writer img{position:absolute;bottom:0;inset-inline-start:10%;width:80%;height:auto;object-fit:contain}
+.aitem__thumb--board{display:grid;place-items:center;background:var(--teal)}
+.aitem__thumb--board svg{width:46%;height:auto}
+.aitem__thumb .secart{width:100%}
+@media (hover:hover){
+  .aitem:hover .aitem__thumb:not(:has(.cover)){outline-color:var(--sand)}
+}
+.aitem:has(.stretched:focus-visible) .aitem__thumb:not(:has(.cover)){outline-color:var(--sand)}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  .aitem:hover .aitem__thumb:not(:has(.cover)){outline-offset:5px}
+  .aitem__thumb--writer img{transition:transform .7s var(--ease-out)}
+  .aitem:hover .aitem__thumb--writer img{transform:translateY(-5%)}
+  .aitem__thumb--board path[fill="#B9A779"]{transition:transform .6s var(--ease-out)}
+  .aitem:hover .aitem__thumb--board path[fill="#B9A779"]{transform:translateX(calc(3px * var(--dir)))}
+}
+@media (prefers-reduced-motion:no-preference){
+  .cat-head__art .secart{animation:tile-up 1s .1s var(--ease-out) backwards}
+  .cat-head__art .secart__word,.cat-head__art .secart__sub{animation:rise .9s .5s var(--ease-out) backwards}
+  .cat-head__art .secart__deco,.cat-head__art .secart__num{animation:fade-in .8s .75s var(--ease-out) backwards}
+  .cat-head__art .secart__cut{animation:mark-cut .9s .75s backwards}
+  .cat-head .body::after{animation:rule-draw 1.2s .25s var(--ease-out) backwards}
+  .cat-head__desc .tw{animation-delay:calc(var(--i) * 55ms + .4s)}
+  .cat-head .tab{animation:fade-in .6s var(--ease-out) backwards;animation-delay:calc(var(--i,0) * 45ms + .7s)}
+  .cat-hero__img{animation:hero-in 1.3s .5s var(--ease-out) backwards}
+}
+@keyframes tile-up{from{clip-path:inset(100% 0 0 0)}}
+
+/* 35. Archive page -------------------------------------------------------------------------
+   The title settles and its rule is drawn from the start edge. The years
+   sit under one sliding sand line and their months step in (watad.js 20).
+   The years band is a chart of the whole archive: each bar is a year, and it
+   opens that year in the calendar above. */
+.ar-title{position:relative;border-bottom:0}
+.ar-title::after{content:"";position:absolute;inset-inline:0;bottom:0;height:2px;background:var(--ink);transform-origin:var(--start) center}
+.arcal{scroll-margin-top:calc(var(--stick-h) + 24px)}
+.section:has(>.container>.l>.arcal){scroll-margin-top:var(--stick-h)}
+.ar-years{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:18px;margin:0;padding:0;list-style:none}
+.ar-years>*{min-width:0}
+.ar-years a{display:flex;flex-direction:column;color:#fff}
+.ar-years__bar{position:relative;display:block;height:150px;margin-bottom:14px;border-bottom:1px solid rgba(255,255,255,.35)}
+.ar-years__bar::after{content:"";position:absolute;inset-inline-start:0;bottom:0;width:min(56px,62%);height:var(--h);background:var(--sand);transform-origin:bottom;transition:background-color .25s}
+.ar-years b{font-size:26px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;transition:color .25s}
+.ar-years span{margin-top:4px;font-size:12px;color:var(--on-dark-2)}
+.ar-years a:hover b,.ar-years a:focus-visible b{color:var(--sand)}
+.ar-years a:hover .ar-years__bar::after,.ar-years a:focus-visible .ar-years__bar::after{background:#fff}
+@media (max-width:767px){   /* one scale kept on a phone: the columns turn into rows */
+  .ar-years{grid-template-columns:minmax(0,1fr);gap:12px}
+  .ar-years a{display:grid;grid-template-columns:44px minmax(0,1fr) 58px;align-items:center;column-gap:12px}
+  .ar-years b{grid-area:1/1;font-size:17px}
+  .ar-years__bar{grid-area:1/2;height:12px;margin:0;border:0;background:rgba(255,255,255,.08)}
+  .ar-years__bar::after{inset-block:0;width:var(--h);height:auto;transform-origin:var(--start) center}
+  .ar-years span{grid-area:1/3;margin:0;text-align:end;white-space:nowrap}
+}
+@media (prefers-reduced-motion:no-preference){
+  .ar-title::after{animation:rule-draw 1.2s .2s var(--ease-out) backwards}
+  .ar-years.is-waiting:not(.is-in) .ar-years__bar::after{transform:scaleY(0)}
+  .ar-years:not(.is-waiting) .ar-years__bar::after,.ar-years.is-in .ar-years__bar::after{animation:grow-y .9s var(--ease-out) backwards;animation-delay:calc(var(--i) * 70ms + .15s)}
+}
+@media (prefers-reduced-motion:no-preference) and (max-width:767px){
+  .ar-years.is-waiting:not(.is-in) .ar-years__bar::after{transform:scaleX(0)}
+  .ar-years:not(.is-waiting) .ar-years__bar::after,.ar-years.is-in .ar-years__bar::after{animation-name:bar-grow}
+}
+
+/* 36. Search pages ------------------------------------------------------------------------
+   The query settles in and its rule is drawn. The words searched for are
+   marked in the results by a sand highlighter that sweeps in the reading
+   direction (watad.js 32), and results glide to their new places on a view
+   switch or a filter (watad.js 3-4). With nothing found, the page offers
+   shorter queries instead of dead filters. */
+.s-head__row{position:relative;border-bottom:0}
+.s-head__row::after{content:"";position:absolute;inset-inline:0;bottom:0;height:2px;background:var(--ink);transform-origin:var(--start) center}
+[data-result-count]{display:inline-block}
+mark.hit{background:linear-gradient(0deg,rgba(185,167,121,.55) 0 36%,transparent 36%) no-repeat var(--start) 0/100% 100%;color:inherit;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.try .terms a{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;color:var(--ink)}
+.try .terms a::after{content:"";flex:0 0 14px;height:14px;background:var(--teal);-webkit-mask:var(--arrow) center/contain no-repeat;mask:var(--arrow) center/contain no-repeat;transform:scaleX(calc(-1 * var(--dir)));opacity:.35;transition:opacity .2s}
+.try .terms a:hover{color:var(--teal)}
+.try .terms a:hover::after{opacity:1}
+@media (max-width:1023px){.l>.try{order:1}}   /* on one column the message comes first, then what to try */
+@media (max-width:767px){   /* three posters become a strip to swipe instead of three screens to scroll */
+  .posters3{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;margin-inline:calc(-1 * var(--pad));padding-inline:var(--pad);scrollbar-width:none}
+  .posters3::-webkit-scrollbar{display:none}
+  .posters3>*{flex:0 0 60%;scroll-snap-align:start}
+}
+@media (prefers-reduced-motion:no-preference){
+  h1[data-query]{animation:word-in .8s .1s var(--ease-out) backwards}
+  .s-head__row::after{animation:rule-draw 1.2s .2s var(--ease-out) backwards}
+  .s-empty{animation:rise .8s .45s var(--ease-out) backwards}
+  mark.hit{animation:hit-sweep .9s .8s var(--ease-out) backwards}
+  [data-arrive]>.is-waiting:not(.is-in) mark.hit{animation:none;background-size:0 100%}
+  [data-arrive]>.is-waiting.is-in mark.hit{animation:hit-sweep-in .9s var(--ease-out) backwards;animation-delay:calc(var(--k,0) * 80ms + .45s)}
+}
+@keyframes hit-sweep{from{background-size:0 100%}}
+@keyframes hit-sweep-in{from{background-size:0 100%}}   /* a second name restarts the sweep when a result arrives */
+
+/* 37. خبر وتعليق page ------------------------------------------------------------------------
+   The timeline is the page: a post links to the piece behind it as a card
+   (or carries its photo), the spine fills with sand down to where the reader
+   is (watad.js 23), and the days sit beside it, the day being read marked
+   (watad.js 33). Posts rise in as they are reached. */
+.tl-wrap{display:grid;grid-template-columns:minmax(0,1fr) 230px;column-gap:var(--gap);align-items:start}
+.tl-wrap>*{min-width:0}
+.tl-col{position:relative}
+.tl__fill{position:absolute;top:0;bottom:0;inset-inline-start:16px;width:2px;margin-inline-start:-.5px;background:var(--sand);transform:scaleY(0);transform-origin:top;pointer-events:none;z-index:1}
+.tl__fill.is-timeline{animation:axis-fill linear both;animation-timeline:scroll(root block)}
+.tl__day,.tl__item::before{z-index:2}
+.post__card{display:grid;grid-template-columns:128px minmax(0,1fr);align-items:center;gap:16px;max-width:680px;margin-top:16px;padding:10px;padding-inline-end:18px;border:1px solid var(--hair);background:#fff;transition:border-color .25s}
+.post__card-img{display:block;aspect-ratio:4/3;overflow:hidden;background:var(--paper)}
+.post__card-img img{width:100%;height:100%;object-fit:cover}
+.post__card-img img.poster{object-fit:contain}
+.post__card-kicker{display:block;margin-bottom:4px;font-size:11.5px;font-weight:600;color:var(--teal)}
+.post__card b{display:block;font-size:15.5px;font-weight:700;line-height:1.55;color:var(--ink);transition:color .2s}
+.post__card:hover,.post__card:focus-visible{border-color:var(--sand)}
+.post__card:hover b,.post__card:focus-visible b{color:var(--teal)}
+.post__media{max-width:680px;margin:16px 0 0;overflow:hidden}
+.post__media img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.tl-side{align-self:stretch}   /* as tall as the timeline, so the index inside can ride along */
+.tl-side__in{position:sticky;top:calc(var(--stick-h) + 28px);padding-top:22px}
+.tl-days{margin-top:14px;border-top:1px solid var(--hair)}
+.tl-days a{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;column-gap:10px;padding:11px 0 11px;padding-inline-start:14px;border-bottom:1px solid var(--hair);color:var(--mid);transition:color .2s}
+.tl-days a::before{content:"";position:absolute;inset-inline-start:0;top:10px;bottom:10px;width:3px;background:var(--sand);transform:scaleY(0);transition:transform .45s var(--ease-out)}
+.tl-days span{font-size:15px;font-weight:600}
+.tl-days small{grid-column:1;font-size:11.5px;color:var(--grey)}
+.tl-days b{grid-column:2;grid-row:1/span 2;font-size:20px;font-weight:700;line-height:1;color:var(--grey);font-variant-numeric:tabular-nums}
+.tl-days a:hover{color:var(--teal)}
+.tl-days a.is-active{color:var(--ink)}
+.tl-days a.is-active::before{transform:none}
+.tl-days a.is-active b{color:var(--teal)}
+.tl-follow{margin-top:28px;padding:18px;background:var(--paper)}
+.tl-follow b{display:block;font-size:15px;font-weight:700;color:var(--teal)}
+.tl-follow p{margin-top:4px;font-size:12.5px;line-height:1.7;color:var(--mid)}
+.tl-follow .social{margin-top:12px}
+.tl-follow .social a{background:#fff}
+@media (max-width:1023px){
+  .tl-wrap{grid-template-columns:minmax(0,1fr)}
+  .tl-side{display:none}   /* one column: the sticky day labels carry the days */
+}
+@media (max-width:767px){
+  .tl__fill{inset-inline-start:9px}
+  .post__card{grid-template-columns:88px minmax(0,1fr);gap:12px;padding:8px;padding-inline-end:12px}
+  .post__card b{font-size:14.5px}
+}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  .post__card-img img.cover,.post__media img{transition:transform 1s var(--ease-out)}
+  .post__card:hover .post__card-img img.cover,.tl__item:hover .post__media img{transform:scale(1.04)}
+}
+
+/* 38. About page ---------------------------------------------------------------------------
+   The name and the line settle, and the motto is written in from the start
+   edge. The four examples share one frame; the comment is shown as a
+   comment. The stance inks in white and sand as it is read (watad.js 25).
+   The mark reads part by part: point at a part and it stands out in the
+   logo while the rest steps back. */
+.ab-offer--media .poster,.ab-note__card{aspect-ratio:9/16}
+.ab-note__card{display:flex;flex-direction:column;justify-content:center;gap:8px;padding:22px 18px;background:var(--paper);border-top:3px solid var(--teal)}
+.ab-note__card b{font-size:17px;font-weight:700;line-height:1.5;color:var(--ink)}
+.ab-note__card i{display:block;height:2px;margin:6px 0 4px;background:var(--sand)}
+.ab-note__card p{font-family:var(--body);font-size:15px;line-height:1.8;color:#3A3A40}
+.ab-note{outline:1px solid transparent}
+@media (hover:hover){.ab-note:hover .ab-note__card{background:#EAEBEB}}
+.ab-mark__art{position:relative;flex-direction:column}
+.ab-mark__art path{transition:opacity .35s var(--ease-out),transform .6s var(--ease-out)}
+.ab-mark__hint{margin-top:18px;font-size:11.5px;color:var(--grey)}
+.ab-part{outline:0;transition:border-color .25s}
+.ab-part:hover,.ab-part:focus-visible{border-top-color:var(--sand)}
+.ab-part:focus-visible{box-shadow:0 -2px 0 var(--sand)}
+.ab-mark[data-show="quote"] .ab-mark__art path:not(.mk-quote),
+.ab-mark[data-show="cut"] .ab-mark__art path:not(.mk-cut){opacity:.12}   /* set by watad.js 34 */
+.ab-links a{position:relative;transition:border-color .25s}
+.ab-links a::after{content:"";position:absolute;top:18px;inset-inline-end:0;width:16px;height:16px;background:var(--teal);-webkit-mask:var(--arrow) center/contain no-repeat;mask:var(--arrow) center/contain no-repeat;transform:scaleX(calc(-1 * var(--dir)));opacity:0;transition:opacity .25s,translate .45s var(--ease-out)}
+.ab-links a:hover,.ab-links a:focus-visible{border-top-color:var(--sand)}
+.ab-links a:hover b,.ab-links a:focus-visible b{color:var(--teal)}
+.ab-links a:hover::after,.ab-links a:focus-visible::after{opacity:1}
+@media (hover:none){.ab-mark__hint{display:none}}
+@media (prefers-reduced-motion:no-preference){
+  .ab-lead .tw{animation-delay:calc(var(--i) * 55ms + .25s)}
+  .ab-motto{animation:write-in 1.1s .9s var(--ease-out) backwards}
+  .ab-mark[data-show="cut"] .mk-cut{transform:translate(-1.4px,.6px)}   /* the point goes in */
+  .ab-mark[data-show="quote"] .mk-quote{transform:translateY(-1px)}
+  .ab-links a::after{translate:calc(-6px * var(--dir)) 0}
+  .ab-links a:hover::after,.ab-links a:focus-visible::after{translate:0 0}
+}
+@keyframes write-in{from{clip-path:inset(0 0 0 100%)}}   /* written from the right, the start of an Arabic line */
+
+/* 39. 404 and the pages index -------------------------------------------------------------
+   404: the title settles beside the outline of the peg that is not there,
+   drawn stroke by stroke, and the search sits right under it. Pages index:
+   the rows arrive, and the one under the pointer points onward. */
+.e404__row{display:flex;align-items:flex-end;gap:clamp(14px,2vw,28px)}
+.e404__peg{flex:0 0 auto;width:clamp(38px,5.4vw,74px);margin-bottom:.12em;line-height:0}
+.e404__peg svg{width:100%;height:auto;overflow:visible}
+.e404__peg path{fill:none;stroke:var(--sand);stroke-width:1.6;stroke-linejoin:round;stroke-dasharray:.035 .025}
+.e404__search{display:flex;gap:8px;margin-top:14px}
+.e404__search input{flex:1;min-width:0;padding:9px 0;border:0;border-bottom:1px solid var(--ink);background:none;font-family:var(--disp);font-size:15px;color:var(--ink);border-radius:0}
+.e404__search input:focus{border-bottom-color:var(--sand)}   /* the site's focus ring still shows */
+.e404__search .btn{padding:8px 18px}
+.idx{position:relative;padding-inline-end:30px}
+.idx::after{content:"";position:absolute;inset-inline-end:0;top:50%;width:16px;height:16px;margin-top:-8px;background:var(--teal);-webkit-mask:var(--arrow) center/contain no-repeat;mask:var(--arrow) center/contain no-repeat;transform:scaleX(calc(-1 * var(--dir)));opacity:0;transition:opacity .2s}
+.idx:hover::after,.idx:focus-visible::after{opacity:1}
+.idx:hover>i,.idx:focus-visible>i{color:var(--teal)}
+.idx>i{transition:color .2s}
+@media (prefers-reduced-motion:no-preference){
+  .e404__peg path{stroke-dasharray:1 0;stroke-dashoffset:1;animation:peg-draw 1.6s .55s var(--ease-out) forwards,peg-dash .01s 2.2s forwards}
+  .e404__note{animation:rise .8s .5s var(--ease-out) backwards}
+  .idx::after{translate:calc(-6px * var(--dir)) 0;transition:opacity .2s,translate .45s var(--ease-out)}
+  .idx:hover::after,.idx:focus-visible::after{translate:0 0}
+}
+@keyframes peg-draw{to{stroke-dashoffset:0}}
+@keyframes peg-dash{to{stroke-dasharray:.035 .025;stroke-dashoffset:0}}   /* once traced, the outline breaks into a dashed mark: the place, not the peg */
+
+/* 40. Writers: photo, cut-out or initial; finding a writer ------------------------------------
+   A writer's picture is a cut-out standing on the teal tile when there is one
+   (transparent PNG or WebP), an ordinary photo filling the tile otherwise, and
+   the writer's initial in sand when there is no photo at all, so a writer the
+   admin adds without a cut-out still looks placed. The writers page and the
+   home popup find a writer by name or field as you type (watad.js 35); the
+   popup lists everyone as compact rows. */
+.writer__pic--photo{background:#0A4450}
+.writer__pic--photo img{inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 28%}
+.writer__pic--mono{display:grid;place-items:center}
+.writer__mono{position:relative;z-index:1;margin-top:-16%;font-size:clamp(44px,5vw,70px);font-weight:700;line-height:1;color:#0A4450}   /* cut into the sand wedge */
+.au-portrait--photo img{inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 25%}
+.aitem__thumb--mono{display:grid;place-items:center}
+.aitem__thumb--mono .writer__mono{margin-top:-12%;font-size:46px}
+.writers-find{position:relative;margin-bottom:30px}
+.writers-find::before{content:"";position:absolute;inset-inline-start:0;top:50%;width:18px;height:18px;margin-top:-9px;background:var(--mid);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5L21 21'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5L21 21'/%3E%3C/svg%3E") center/contain no-repeat;pointer-events:none}
+.writers-find input{width:100%;padding:12px 0;padding-inline-start:30px;border:0;border-bottom:2px solid var(--ink);border-radius:0;background:none;font-family:var(--disp);font-size:17px;color:var(--ink)}
+.writers-find input::placeholder{color:var(--grey)}
+.writers-find input:focus{border-bottom-color:var(--sand)}
+.writers-empty{padding:22px 0;border-top:1px solid var(--hair);font-size:15px;color:var(--mid)}
+.writers-empty[hidden]{display:none}
+.writers-empty button{padding:0;border:0;background:none;font:inherit;color:var(--teal);cursor:pointer}
+.writers-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:0 var(--gap)}
+.writer--row{display:grid;grid-template-columns:48px minmax(0,1fr);align-content:center;align-items:center;column-gap:14px;padding:10px 0;border-bottom:1px solid var(--hair)}
+.writer--row .writer__pic{grid-row:1/span 2;width:48px;border-bottom-width:2px}
+.writer--row .writer__name{margin-top:0;font-size:15px;line-height:1.35}
+.writer--row .writer__field{margin-top:2px;font-size:11.5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.writer--row .writer__mono{margin-top:-12%;font-size:22px}
+.writer--card .writer__field{min-height:2.9em;line-height:1.45}
+@media (max-width:1023px){.writers-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:767px){.writers-list{grid-template-columns:minmax(0,1fr)}}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  .writer:hover .writer__pic--photo img,.writer:has(.stretched:focus-visible) .writer__pic--photo img{transform:scale(1.05)}
+}

@@ -11,15 +11,15 @@ Static front-end theme for **وتد (watad.media)**. The whole thing is plain HT
 |---|---|
 | `index.html` | الرئيسية |
 | `article.html` | المقال (فصول، جداول ارقام، مراجع، يتبع القراءة) |
-| `category.html` | القسم (سياسة): عنوان القسم كتصميم، مادة مختارة، ثم كل المواد بشكل القائمة المطلوب + ارقام صفحات |
-| `search.html` | نتائج البحث: قائمة / شبكة / مضغوط + تصفية تعمل |
-| `search-empty.html` | البحث بلا نتائج |
+| `category.html` | القسم (سياسة): عنوان القسم كتصميم، مادة مختارة، ثم كل المواد بشكل القائمة المطلوب، تبويب الانواع يصفي القائمة في مكانها + ارقام صفحات |
+| `search.html` | نتائج البحث: قائمة / شبكة / مضغوط + تصفية تعمل، والكلمة المبحوث عنها معلمة في النتائج |
+| `search-empty.html` | البحث بلا نتائج: الفاظ اقصر او قريبة بدل مرشحات معطلة |
 | `author.html` | صفحة الكاتب: صورة مفرغة على بلاطة الهوية، بطاقة نشر (عدد، توزيع الاقسام، ايقاع السنة شهرا بشهر)، كل المواد بتبويب وترتيب وصفحات تعمل، متابعة، كتاب القسم |
-| `archive.html` | الارشيف «السجل»: تصفح بالتاريخ (سنة ثم شهر، مثل كانون الاول 2025)، شهور تفتح وتطوى، ارقام صفحات |
-| `news.html` | خبر وتعليق: خط زمني قريب من شكل تويتر، والخبر يفتح في نافذة منبثقة (صفحته المفردة) |
-| `writers.html` | كتاب وتد: كل الكتاب بصورهم |
-| `about.html` | من نحن (النص الرسمي) |
-| `404.html` | الصفحة غير موجودة |
+| `archive.html` | الارشيف «السجل»: تصفح بالتاريخ (سنة ثم شهر، مثل كانون الاول 2025)، شهور تفتح وتطوى، ارقام صفحات، ورسم السنوات يفتح كل سنة في التقويم |
+| `news.html` | خبر وتعليق: خط زمني قريب من شكل تويتر، بطاقة المادة المرتبطة في كل خبر، والايام بجانبه، والخبر يفتح في نافذة منبثقة (صفحته المفردة) |
+| `writers.html` | كتاب وتد: كتاب الموقع الـ 45 بصورهم، مرتبين ابجديا، مع بحث بالاسم او الاختصاص |
+| `about.html` | من نحن (النص الرسمي)، والشعار يقرا جزءا جزءا |
+| `404.html` | الصفحة غير موجودة، والبحث فيها مباشرة |
 | `pages.html` | فهرس الصفحات للعرض على العميل |
 
 Open any file directly in the browser. The only external request is Google Fonts (El Messiri + Amiri).
@@ -28,11 +28,11 @@ Open any file directly in the browser. The only external request is Google Fonts
 
 ```
 assets/
-  css/watad.css      one stylesheet, sections numbered 1–32
+  css/watad.css      one stylesheet, sections numbered 1–40
   js/watad.js        vanilla JS, behaviour opt-in via data-attributes
   img/brand/         logo + the six identity marks (SVG)
   img/posts/         demo images (posters 9:16, covers 16:9)
-  img/writers/       writers' cut-out portraits (placeholder.svg until the real ones arrive)
+  img/writers/       the writers' cut-outs, <slug>.webp at 480×600 (made from their photos on watad.media/authors)
 *.html               one file per template
 ```
 
@@ -75,6 +75,15 @@ One idea runs through all of it: the wedge (وتد) is driven into the axis, and
   - **While reading:** the page axis fills with sand down to where the reader is. Each chapter's rule draws from the start edge as its wedge is planted. The thesis and the closing line ink word by word with the scroll. The figures count up and the data-band bars grow.
   - **Tools:** the numbered citations show their source on hover or focus, and a click jumps to the source in the list, which flashes. Selecting a passage offers "quote on X" and "copy the quote" (with the title and address). The contents show the time left to read, and the head has share buttons.
   - A sand reading-progress line also runs along the top of the viewport, and the contents underline the chapter in view.
+- **The other pages (CSS 33–40, JS 30–35):**
+  - **Lists arrive:** rows and cards below the fold rise into place as they are reached, a beat apart when several come in together (`data-arrive`).
+  - **Titles:** each page's title settles word by word and the rule under it is drawn from the start edge. On the category page the section's tile is raised into place and its sharp angle cuts in.
+  - **Tabs:** one sand line slides from tab to tab (category types, archive years, author works). On the category page a type filters the list in place, and the editors' pick and the section's pager step aside while it does.
+  - **Archive:** a year's months step in when it is chosen, and the years band is a bar chart of the whole archive (rows on a phone); a bar opens that year in the calendar above.
+  - **Search:** the words searched for are marked with a sand highlighter that sweeps in reading direction, and results glide to their new places when the view or a filter changes.
+  - **خبر وتعليق:** the timeline's spine fills with sand down to where the reader is, a post carries a card for the piece behind it, and the days sit beside it with the day being read marked.
+  - **About:** the motto is written in from the right, the stance inks in white and sand, and pointing at a part of the mark brings it forward in the logo.
+  - **404:** the outline of the missing peg is traced beside the title, then breaks into a dashed mark.
 - **Between pages:** same-origin navigation cross-fades where the browser supports cross-document view transitions.
 - **Reduced motion:** with `prefers-reduced-motion`, nothing moves. Colour, opacity and state changes stay.
 - With JS off, everything is still visible. Nothing starts hidden unless the script has already taken charge of revealing it.
@@ -90,9 +99,9 @@ One idea runs through all of it: the wedge (وتد) is driven into the axis, and
 | Articles inside a section in the client's format | `.alist` / `.aitem` (CSS 21): square picture at the start, then title, a two-line dek, and the writer with an avatar. |
 | خبر وتعليق set apart, as a timeline, with a popup single page | `news.html` (CSS 22–23, JS 18): a timeline with day markers. Each post is the news in a line with the editor's comment under it. The headline opens the post in a popup, which has its own address (`news.html#n-3`), next/previous and arrow keys, and copy link / share on X. The home page's news items link to their popups. |
 | The last six posts on X, on the home page | `.xside` (CSS 25) next to the news on the home page. In production, fill it from the X API or a cached feed. It's six items, newest first. |
-| Writers with cut-out photos in the Watad look; six on the home page + "انقر للمزيد" + a popup with everyone + a separate list | `.writer` (CSS 24): the cut-out photo (transparent PNG) stands on a teal tile with the sand wedge behind. The home page shows six writers plus the "click for more" tile, which opens the popup (`#writers-modal`) with every writer. `writers.html` is the separate list. |
+| Writers with cut-out photos in the Watad look; six on the home page + "انقر للمزيد" + a popup with everyone + a separate list | `.writer` (CSS 24, 40): the site's 45 writers (watad.media/authors), with their names and fields. The 27 writers with a photo on the site stand as cut-outs on a teal tile with the sand wedge behind, their faces at one size and height (the one pen drawing is set as light lines on a teal silhouette). A writer with only an ordinary photo would fill the tile with it, and a writer with no photo gets their initial cut into the wedge. The home page shows six writers plus the "click for more" tile, which opens the popup (`#writers-modal`) with everyone and a search. `writers.html` is the separate list, alphabetical, with the same search. |
 
-Still with the client: the designer's section artwork, the writers' cut-out photos (from Omar), the new text for من نحن / رؤيتنا / هويتنا ورسالتنا (the writers are rewriting it), and the X account feed.
+Still with the client: the designer's section artwork, photos for the 18 writers who have none on the site, the new text for من نحن / رؤيتنا / هويتنا ورسالتنا (the writers are rewriting it), and the X account feed.
 
 ## Components
 
@@ -106,11 +115,16 @@ Still with the client: the designer's section artwork, the writers' cut-out phot
 | `.idx`, `.fg`, `.stat` | Numbered index row, figure row, big stat |
 | `.facets` / `.facet__opt` | Filter rail |
 | `.tabs`, `.chips`, `.pager`, `.btn`, `.btn--ghost`, `.link-accent`, `.social` | Controls |
-| `.portrait` | Author photo 4:5. Replace the placeholder SVG with `<img>`. |
+| `.au-portrait` (`--photo`) | The writer's picture on the author page, 4:5: a cut-out stands on the tile; with `--photo` an ordinary photo fills it. |
 | `.secart.secart--{binaa,siyasa,wiki,nas,news}` | Section title artwork (square). Put the admin's `<img>` inside in place of `.secart__art`. |
 | `.alist` > `article.story.aitem` | Section list item: `.aitem__thumb` (cover, poster or `--text`), `.aitem__title`, `.aitem__dek`, `.aitem__by` with `.avatar` |
 | `.tl` > `.tl__day` / `li.tl__item[data-news]#n-…` > `.post` | Timeline post. `.post__more` (hidden) holds the full text and the related link the popup shows. |
-| `.writer`, `.writer--card`, `.writer--more`, `.writers-row`, `.writers-list`, `.writers-grid` | Writers: portrait tile + name + field + count |
+| `.writer`, `.writer--card`, `.writer--row`, `.writer--more`, `.writers-row`, `.writers-list`, `.writers-grid` | Writers: picture tile + name + field. `.writer__pic` holds a cut-out, or is `--photo` (a photo fills it) or `--mono` (`.writer__mono`, the initial). `--row` is the compact line used in the popup. `.writers-find` is the search field. |
+| `.post__card`, `.post__media` | In a timeline post: the piece behind the news as a card (picture + type + title), or the post's own photo |
+| `.tl-side` > `.tl-days` | The days beside the timeline, with the count of posts in each |
+| `.ar-years` | The archive's years as a bar chart (`--h` is the year's share of the biggest) |
+| `.ab-note`, `.ab-mark` + `[data-part]` | About: a comment shown as a comment in the examples; the logo read part by part |
+| `.e404__peg`, `.e404__search` | 404: the outline of the missing peg, and search in place |
 | `dialog.modal` | Popup (native dialog). A sheet from below on phones. |
 | `.xside` > `.xfeed` > `.xpost` | X feed panel |
 | `.nlist` > `.nitem` (`.nitem--lead`) | The خبر وتعليق items on the home page. Each has a picture, the place and time, the news line and the editor's comment, and opens its post in the timeline popup. Covers crop into the square, posters stay whole. |
@@ -143,17 +157,23 @@ Still with the client: the designer's section artwork, the writers' cut-out phot
 | `data-archive-filter="section\|type"` + `data-value` on the archive chips | Filters the month rows by their kicker (`سياسة — تحليل`). Also reads `?section=&type=`, which is how "كل مداخل ثورة ويكي" links in. |
 | `data-wiki`, `data-wiki-year` + `data-count`, `data-wiki-search`, `data-wiki-preview`, `data-wiki-count`, `data-wiki-empty`, `data-wiki-clear` | The ثورة ويكي register. The years filter it, and the search covers every year and treats أ/إ/آ, ة/ه and ى/ي as the same letter. The row under the pointer or keyboard focus shows in the preview. |
 | `data-grow` | A block whose bars grow when it scrolls into view (the archive years at the home closing, the article's data band) |
-| `data-axis-fill` on an `i.axis-fill` next to the page axis | The axis fills with sand to the reading position (article) |
+| `data-axis-fill` on an `i.axis-fill` next to the page axis, or on the timeline's `i.tl__fill` | The axis (or the spine) fills with sand to the reading position (article, خبر وتعليق) |
 | `data-count` | A figure that counts up from 0 when it comes into view. Screen readers get the final figure throughout. |
-| `data-ink` on a plain-text paragraph | Inks word by word as it is read |
+| `data-ink` on a paragraph | Inks word by word as it is read. Words inside an inline element (a phrase in sand) keep its colour. |
 | `.cite > a[href="#src-N"]` + `li#src-N` in `.sources` | Citation with a source preview |
 | `data-time-left` | Time left to read, inside the article contents |
 | `data-share="x\|telegram"` | Share links, rebuilt from the page's address and title |
-| `data-works` with `data-works-filter`, `data-works-sort`, `data-works-list` > `li[data-section][data-date]`, `data-works-pager`, `data-works-count` | The author's works. Filters by section, sorts newest or oldest, and shows 8 a page. The state lives in `?section=&sort=&page=`, and a sand line slides between the tabs. With real data, the server reads the same parameters. |
+| `data-works` with `data-works-filter`, `data-works-sort`, `data-works-list` > `[data-date]` rows, `data-works-pager`, `data-works-count`, `data-works-all` | A list that filters, sorts and pages in place. `data-works-by` names the attribute the tabs filter on (`section` unless set; the category page uses `type`), and `data-works-per` the rows a page (8 unless set; `0` leaves paging to the server). The state lives in `?section=` (or `?type=`) `&sort=&page=`, and a sand line slides between the tabs. Tabs may be links to that address, so they work without script. Blocks marked `data-works-all` (an editors' pick, the section's pager) show only while no filter is on. With real data, the server reads the same parameters. |
+| `data-arrive` | Its children rise into place as they reach the reader, a beat apart |
+| `data-year-jump="2025"` | A link that opens that year in the archive calendar above and brings it into view |
+| (automatic) under `data-results` | Each word of `?q=` (or the page's query) is wrapped in `mark.hit` in the result titles and deks. The server can print the same marks instead. |
+| `data-tl-days` | The day index beside the timeline: marks the day being read and glides to a day |
+| `data-part="quote\|cut"` inside `.ab-mark` | Pointing at or focusing the part brings that part forward in the logo |
+| `data-writers`, `data-writers-search`, `data-writer="name field"`, `data-writers-count`, `data-writers-empty`, `data-writers-clear` | Find a writer by name or field as you type (writers page and the home popup). أ/إ/آ, ة/ه and ى/ي match each other; the first Esc clears the field. |
 
 ## Laravel / Blade
 
-1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=13`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
+1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=14`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
 2. **Active nav**: add `aria-current="page"` to the current section link, e.g. `@if(request()->is('politics*')) aria-current="page" @endif`.
 3. **Story component**: `<x-story :post="$post" variant="row" />` should output:
    ```html
@@ -170,17 +190,20 @@ Still with the client: the designer's section artwork, the writers' cut-out phot
 6. **Archive**: `archive.html?y=&m=` should render that month server-side, and the month grid's counts come from a `GROUP BY year, month`. You can load a collapsed month's items on demand, for example with `fetch('/archive/2026/07')` into `.month__body`.
 7. **خبر وتعليق**: posts are a separate type (news line, editor's comment, place, time, related article). The timeline is `news?page=`, and each post also needs its own URL (`news/{id}`) that renders the same popup content as a page for sharing and search engines.
 8. **Section artwork**: add an image field to sections (square, SVG or PNG at least 800×800). Output it inside `.secart`, falling back to the text placeholder when it's empty.
-9. **Writers**: add a `photo_cutout` (transparent PNG, portrait, at least 800×1000) and an `is_featured` / `sort` to pick the six shown on the home page.
+9. **Writers**: add a `photo_cutout` (transparent PNG or WebP, portrait, at least 800×1000) next to the ordinary `photo`, and an `is_featured` / `sort` to pick the six shown on the home page. Output the cut-out plain inside `.writer__pic`; with only a photo, add `.writer__pic--photo`; with neither, `.writer__pic--mono` with the initial in `.writer__mono`. Put the name and field in the card's `data-writer` for the search.
 10. **ثورة ويكي**: entries are numbered in the order they're added to the register (083 is the latest). The year links go to `archive.html?y=&section=ثورة ويكي`. Render the chosen year's latest entries server-side, and point the search box at a query endpoint when the register grows. Add `data-img` to a row when the entry has a poster; without one, the preview builds its index card from the row.
 11. **Article**: split the title into word spans in Blade (`@foreach(explode(' ', $post->title) as $i => $w)<span class="tw" style="--i:{{ $i }}">{{ $w }}</span> @endforeach`) and keep the whole title in the `h1`'s `aria-label`. Citations come from the editor as `[1]` markers, rendered as `.cite` links to the sources list.
-12. **Author**: the portrait is the writer's cut-out photo on the teal tile. The profile's twelve-month strip is `GROUP BY month` over the last year: each `li` gets `--h` (the share of the busiest month) and a `data-tip` label.
+12. **Author**: the portrait is the writer's cut-out photo on the teal tile (`.au-portrait--photo` when only an ordinary photo exists). The profile's twelve-month strip is `GROUP BY month` over the last year: each `li` gets `--h` (the share of the busiest month) and a `data-tip` label.
+13. **Category**: render the type tabs as links to `?type=…` (they filter in place with script, and reload filtered without it), and mark the editors' pick and the pager `data-works-all`. Give each row `data-type` and `data-date`. A piece with no picture shows its writer (cut-out, photo or initial), the Watad mark for هيئة التحرير, or its section's artwork.
+14. **Titles and search marks**: page titles are split into word spans like the article title (`.tw` with `--i`, the whole title in `aria-label`). The search can print `<mark class="hit">` around matches itself; the script only adds marks where there are none.
+15. **خبر وتعليق**: a post's card is its related article (picture, type, title); a post without one can carry its own photo in `.post__media`. Give each day label an `id` (`d-0916`) for the day index.
 
 ## Images
 
-- Posters: upload at **1080×1920**. Covers: at least **1520×856**. Author photo: **1120×1400** (4:5). Writer cut-out: transparent PNG, at least **800×1000**, with the shoulders touching the bottom edge.
+- Posters: upload at **1080×1920**. Covers: at least **1520×856**. Author photo: **1120×1400** (4:5). Writer cut-out: transparent PNG or WebP, at least **800×1000**, with the shoulders touching the bottom edge. An ordinary writer photo works too (square, at least 560×560); it fills the tile until the cut-out exists.
 - The demo images in `assets/img/posts` are low resolution and are for layout only.
 
 ## Open items for the client
 
-- Real author photos and bios, plus links to the writers' accounts (the social icons currently point to `#`).
+- Photos for the 18 writers who have none on the site (the other 27 are cut out from their site photos), plus links to the writers' accounts (the social icons currently point to `#`).
 - Real counts per section and per author (the demo counts are consistent with each other but aren't live data).
