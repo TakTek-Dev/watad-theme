@@ -442,12 +442,6 @@ button{font:inherit;color:inherit;cursor:pointer}
 .home-sec{display:grid;grid-template-columns:minmax(0,1fr) 240px 200px;gap:var(--gap);align-items:start}
 .home-build{display:grid;grid-template-columns:320px minmax(0,1fr) 200px;gap:var(--gap);align-items:end}
 .home-news{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:var(--gap);align-items:start}
-.news-item{display:grid;grid-template-columns:96px minmax(0,1fr);gap:26px;border-top:1px solid rgba(255,255,255,.2);padding:18px 0}
-.news-item:first-child{border-top-color:rgba(255,255,255,.5)}
-.news-item__where{font-size:12px;font-weight:600;color:var(--sand)}
-.news-item__where time{display:block;font-weight:400;color:var(--on-dark-2);margin-top:2px}
-.news-item b{display:block;font-size:17px;font-weight:600;line-height:1.5}
-.news-item p{font-family:var(--body);font-size:15.5px;line-height:1.8;color:#CFD9DA;margin-top:6px}
 .xfeed{margin:0;padding:0;list-style:none}
 .home-people{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:var(--gap);align-items:start}
 .pull-up{margin-top:-150px;position:relative;z-index:2}
@@ -488,7 +482,6 @@ button{font:inherit;color:inherit;cursor:pointer}
   .home-build>:first-child{max-width:240px}
   .home-build>:nth-child(3){grid-template-columns:130px minmax(0,1fr)}
   .home-sec>:nth-child(3){max-width:220px}
-  .news-item{grid-template-columns:1fr;gap:6px}
   .authors-row{grid-template-columns:repeat(2,minmax(0,1fr))}
   .archive-bar form{flex-wrap:wrap}
   .archive-bar form>.meta{flex-basis:100%}
@@ -1060,7 +1053,6 @@ html:has(dialog[open]){overflow:hidden}
 .xpost__text{font-size:13.5px;line-height:1.6;color:var(--on-dark);transition:color .2s}
 .xpost__meta{display:flex;gap:6px;margin-top:4px;font-size:11px;color:var(--on-dark-2)}
 .xpost:hover .xpost__text{color:#fff}
-.news-item b a:hover{color:var(--sand)}
 
 /* 26. Archive by date (التصفح بالتاريخ) -------------------------------------------
    Year tabs over a month grid: Levantine names with the international ones,
@@ -1284,3 +1276,44 @@ a.arcal__m:hover .arcal__bar::after{background:var(--teal)}
   .site-footer__base{row-gap:0}
 }
 @media (max-width:767px){.site-footer__follow{grid-column:1/-1}}
+
+/* 30. Home خبر وتعليق band -------------------------------------------------------
+   The news in a line with the editor's comment under it, now with pictures:
+   a lead with its cover, then pictured rows (covers crop into the square,
+   posters stay whole in it). Each item opens its post in the timeline popup.
+   The X panel keeps pace beside it (sticky). */
+.home-news__col{min-width:0}
+.nlist{margin:0;padding:0;list-style:none;border-top:1px solid rgba(255,255,255,.5)}
+.nitem .story{display:grid;grid-template-columns:104px minmax(0,1fr);column-gap:20px;align-items:start;padding:18px 0;border-bottom:1px solid rgba(255,255,255,.16)}
+.nitem__img{display:block;aspect-ratio:1;overflow:hidden;background:#0A4450}
+.nitem__img img{width:100%;height:100%;aspect-ratio:auto;object-fit:cover}
+.nitem__img img.poster{object-fit:contain;background:none}   /* the frame colour shows beside a whole poster, not the paper tone */
+.nitem__text{min-width:0}
+.nitem__where{font-size:12px;font-weight:600;line-height:1.5;color:var(--sand)}
+.nitem__where time{margin-inline-start:8px;font-weight:400;color:var(--on-dark-2)}
+.nitem__news{margin-top:6px;font-size:17px;font-weight:600;line-height:1.55;color:#fff}
+.nitem__comment{margin-top:6px;font-family:var(--body);font-size:15.5px;line-height:1.75;color:#CFD9DA;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nitem--lead .story{grid-template-columns:minmax(0,11fr) minmax(0,10fr);column-gap:28px;align-items:center;padding:22px 0 24px}
+.nitem--lead .nitem__img{aspect-ratio:16/9}
+.nitem--lead .nitem__news{font-size:clamp(20px,1.9vw,25px);font-weight:700;line-height:1.45}
+.nitem--lead .nitem__comment{font-size:16.5px;-webkit-line-clamp:3}
+.home-news__more{margin-top:22px}
+.home-news__side{display:grid;gap:36px;align-content:start;min-width:0}
+.mread{border-top:1px solid rgba(255,255,255,.5)}
+.mread__head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 0 10px;font-size:14px;font-weight:700;line-height:1.5;color:#fff}
+.mread__head small{font-size:11px;font-weight:400;color:var(--on-dark-2)}
+.mread__list{margin:0;padding:0;list-style:none}
+.mread__list a{display:grid;grid-template-columns:30px minmax(0,1fr);column-gap:12px;padding:12px 0;border-top:1px solid rgba(255,255,255,.16)}
+.mread__n{grid-row:1/span 2;font-size:26px;font-weight:700;line-height:1;color:var(--sand);font-variant-numeric:tabular-nums}   /* the rank is the information here */
+.mread__t{font-size:14px;font-weight:600;line-height:1.55;color:var(--on-dark);transition:color .2s}
+.mread__k{grid-column:2;margin-top:4px;font-size:11px;color:var(--on-dark-2)}
+.mread__list a:hover .mread__t{color:#fff}
+@media (max-width:1023px){.home-news__side{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap)}}
+@media (max-width:767px){.home-news__side{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:767px){
+  .nitem .story{grid-template-columns:80px minmax(0,1fr);column-gap:14px;padding:16px 0}
+  .nitem__news{font-size:15.5px}
+  .nitem__comment{font-size:14.5px}
+  .nitem--lead .story{grid-template-columns:minmax(0,1fr);row-gap:14px}
+  .nitem--lead .nitem__news{font-size:20px}
+}

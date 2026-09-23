@@ -28,7 +28,7 @@ Open any file directly in the browser. The only external request is Google Fonts
 
 ```
 assets/
-  css/watad.css      one stylesheet, sections numbered 1–29
+  css/watad.css      one stylesheet, sections numbered 1–30
   js/watad.js        vanilla JS, behaviour opt-in via data-attributes
   img/brand/         logo + the six identity marks (SVG)
   img/posts/         demo images (posters 9:16, covers 16:9)
@@ -109,6 +109,8 @@ Still with the client: the designer's section artwork, the writers' cut-out phot
 | `.writer`, `.writer--card`, `.writer--more`, `.writers-row`, `.writers-list`, `.writers-grid` | Writers: portrait tile + name + field + count |
 | `dialog.modal` | Popup (native dialog). A sheet from below on phones. |
 | `.xside` > `.xfeed` > `.xpost` | X feed panel |
+| `.nlist` > `.nitem` (`.nitem--lead`) | The خبر وتعليق items on the home page. Each has a picture, the place and time, the news line and the editor's comment, and opens its post in the timeline popup. Covers crop into the square, posters stay whole. |
+| `.mread` | "الاكثر قراءة": a ranked list under the X panel, so the side column ends where the news column ends |
 | `.wk` (`[data-wiki]`) | The ثورة ويكي register on the home page: `.wk-preview` (poster, or `.wk-card` built from the row), `.wk-years` year links, `.wk-search`, `.wk-table` rows `tr[data-year][data-img]` |
 | `.wd-about`, `.wd-rec` | Home closing: the statement with the name's meaning and three ways in, then the archive on paper (years with their weight, a month jump, numbered pages) |
 | `.site-footer` | Footer aligned to the rail. The axis runs on into it and ends on the base row's ground line with the sand quote-wedge (`.site-footer__end`). Columns: الاقسام / عن وتد / تصفح / تابع وتد, then © and "الى الاعلى". |
@@ -140,7 +142,7 @@ Still with the client: the designer's section artwork, the writers' cut-out phot
 
 ## Laravel / Blade
 
-1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=8`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
+1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=9`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
 2. **Active nav**: add `aria-current="page"` to the current section link, e.g. `@if(request()->is('politics*')) aria-current="page" @endif`.
 3. **Story component**: `<x-story :post="$post" variant="row" />` should output:
    ```html
