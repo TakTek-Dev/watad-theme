@@ -3,6 +3,7 @@
    One stylesheet, no framework. RTL first.
    Sections: 1 tokens · 2 base · 3 layout & axis · 4 type · 5 chrome
              6 components · 7 page blocks · 8 utilities · 9 responsive
+             10–17 pages · 18 motion & interaction
    ========================================================================== */
 
 /* 1. Tokens ---------------------------------------------------------------- */
@@ -10,12 +11,12 @@
   --teal:#0C4D5A;          /* brand primary */
   --sand:#B9A779;          /* brand accent — selection, index numerals, marks on dark */
   --ink:#282828;           /* body text on white */
-  --grey:#818189;          /* brand grey — dates, quiet notes */
+  --grey:#6E6E75;          /* brand grey (#818189) darkened to 4.5:1 on white and paper — dates, quiet notes */
   --mid:#5F5F66;           /* secondary text */
   --hair:#DDE0E0;          /* hairlines */
   --paper:#F2F2F2;         /* boxes, sources */
   --on-dark:#DCE3E4;       /* text on teal */
-  --on-dark-2:#9AA2A3;     /* quiet text on teal */
+  --on-dark-2:#ABB9BB;     /* quiet text on teal, 4.6:1 */
   --axis:rgba(12,77,90,.2);
   --axis-dark:rgba(185,167,121,.45);
 
@@ -27,14 +28,27 @@
   --gap:40px;              /* gutter */
   --axis-x:180px;          /* axis offset from the container's start edge (rail + half gutter) */
   --pad:24px;              /* outer margin on small screens */
+  --bar-h:56px;            /* brand row of the header */
+  --sub-h:46px;            /* sections row, the part that stays on screen */
+  --stick-h:46px;          /* what the sticky header covers at the top of the viewport */
+
+  --ease-out:cubic-bezier(.16,1,.3,1);   /* arrivals */
+  --ease-in:cubic-bezier(.55,0,1,.45);   /* exits */
+  --start:left;            /* physical side of inline-start, for transform-origin */
+  --dir:1;                 /* reading direction, for small directional nudges */
 }
+[dir="rtl"]{--start:right;--dir:-1}
 
 /* 2. Base ------------------------------------------------------------------ */
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:#fff;color:var(--ink);font-family:var(--disp);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
-a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--sand);outline-offset:3px}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--sand);outline-offset:3px}
+::selection{background:rgba(185,167,121,.38);color:inherit}
+html{scrollbar-color:#B9BCBC #fff}
+input,select,textarea{caret-color:var(--teal)}
+[id]{scroll-margin-top:calc(var(--stick-h) + 24px)}
 img{display:block;max-width:100%;height:auto}
 h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.45}
 p{margin:0}
@@ -60,7 +74,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .body{min-width:0}
 
 /* wedge marks on the axis (placed inside .rail) */
-.wedge{position:absolute;top:-4px;inset-inline-start:var(--axis-x);transform:translateX(50%);line-height:0}
+.wedge{position:absolute;top:-4px;inset-inline-start:var(--axis-x);transform:translateX(50%);line-height:0;z-index:4}   /* stays on the axis, above a lifted board */
 .wedge--low{top:22px}
 
 /* body splits */
@@ -76,6 +90,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* dark bands */
 .band{position:relative;z-index:1;background:var(--teal);color:#fff}
 .band .axis{background:var(--axis-dark)}
+.band:not(.band--paper) .wedge path{fill:var(--sand)}   /* a teal mark on a teal band disappears */
 .band--paper{background:var(--paper);color:var(--ink)}
 .band--paper .axis{background:var(--axis)}
 
@@ -109,21 +124,29 @@ button{font:inherit;color:inherit;cursor:pointer}
 .hex{direction:ltr;unicode-bidi:isolate}
 
 /* 5. Chrome: header, drawer, search overlay, footer ------------------------- */
-.site-header{position:relative;z-index:20;background:var(--teal)}
-.site-header__bar{height:56px;display:flex;align-items:center;gap:46px}
+.site-header{position:sticky;top:calc(-1 * var(--bar-h));z-index:30;background:var(--teal)}   /* the brand row scrolls away, the sections row stays */
+.site-header__bar{height:var(--bar-h);display:flex;align-items:center;gap:18px}
 .site-header__logo{display:flex;align-items:center;line-height:0}
-.nav{display:flex;align-items:center;gap:30px}
-.nav a{font-size:13.5px;color:var(--on-dark);padding-block:19px 17px;border-bottom:2px solid transparent}
-.nav a:hover{color:#fff}
-.nav a[aria-current="page"]{color:#fff;font-weight:600;border-bottom-color:var(--sand)}
+.site-header__tag{font-size:12.5px;color:var(--on-dark-2);padding-inline-start:18px;border-inline-start:1px solid rgba(255,255,255,.2);line-height:1.6}
 .site-header__tools{margin-inline-start:auto;display:flex;align-items:center;gap:20px}
+.site-header__date{font-size:12px;color:var(--on-dark-2);padding-inline-end:4px;white-space:nowrap}
 .site-header__tools a{font-size:12px;color:var(--on-dark-2);padding-block:19px 17px;border-bottom:2px solid transparent}
 .site-header__tools a[aria-current="page"]{color:#fff;border-bottom-color:var(--sand)}
 .icon-btn{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;background:none;border:0;color:var(--on-dark-2)}
 .icon-btn:hover{color:#fff}
 .icon-btn svg{width:18px;height:18px}
 .burger{display:none}
-.site-header__sub{display:none}
+/* sections row: always on screen, full width, sticks to the top of the viewport */
+.site-header__sub{border-top:1px solid rgba(255,255,255,.14)}
+.site-header__subin{height:var(--sub-h);display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;column-gap:24px}
+.site-header__secs{display:flex;justify-content:space-between;align-items:center;min-width:0}
+.site-header__secs a{font-size:15.5px;font-weight:600;color:var(--on-dark);padding-block:12px 10px;border-bottom:2px solid transparent;white-space:nowrap}
+.site-header__secs a:hover{color:#fff}
+.site-header__secs a[aria-current="page"]{color:#fff;border-bottom-color:var(--sand)}
+.site-header__mark{display:flex;align-items:center;line-height:0}
+.site-header__acts{display:flex;justify-content:flex-end}
+.site-header__mark,.site-header__acts{visibility:hidden;opacity:0;transition:opacity .25s,visibility 0s .25s}
+.site-header.is-stuck .site-header__mark,.site-header.is-stuck .site-header__acts{visibility:visible;opacity:1;transition:opacity .35s,visibility 0s}   /* once the brand row is gone */
 
 .drawer{position:fixed;inset:0;z-index:50;background:var(--teal);color:#fff;padding:22px var(--pad) 40px;display:none;overflow:auto}
 .drawer.is-open{display:block}
@@ -135,9 +158,11 @@ button{font:inherit;color:inherit;cursor:pointer}
 .search-overlay{position:fixed;inset:0;z-index:60;background:rgba(12,77,90,.97);display:none;align-items:flex-start;padding-top:18vh}
 .search-overlay.is-open{display:flex}
 .search-overlay form{width:min(880px,100% - 2*var(--pad));margin-inline:auto;border-bottom:2px solid var(--sand);display:flex;gap:16px;align-items:center;padding-bottom:12px}
-.search-overlay input{flex:1;background:none;border:0;outline:0;color:#fff;font-family:var(--disp);font-size:clamp(26px,4vw,44px);font-weight:600}
-.search-overlay input::placeholder{color:rgba(255,255,255,.35)}
+.search-overlay input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;caret-color:var(--sand);font-family:var(--disp);font-size:clamp(26px,4vw,44px);font-weight:600}
+.search-overlay input::placeholder{color:rgba(255,255,255,.62)}
 .search-overlay__close{position:absolute;top:18px;inset-inline-end:var(--pad);color:#fff}
+.search-overlay .btn{background:transparent;border-color:rgba(255,255,255,.55)}   /* a teal button on the teal veil had no edge */
+.search-overlay .btn:hover{background:#fff;border-color:#fff;color:var(--teal)}
 
 .site-footer{position:relative;z-index:1;background:var(--teal);border-top:1px solid rgba(255,255,255,.2);color:var(--on-dark);padding:32px 0 38px}
 .site-footer__row{display:flex;justify-content:space-between;align-items:center;gap:28px;flex-wrap:wrap}
@@ -149,20 +174,23 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* 6. Components ------------------------------------------------------------ */
 /* rail label */
 .rail-label{border-top:1px solid var(--ink);padding-top:11px;font-size:12px;color:var(--mid);line-height:1.75}
-.rail-label b{display:block;font-size:16px;font-weight:600;color:var(--teal);line-height:1.4;margin-bottom:2px}
+.rail-label b,.rail-label h2{display:block;font-size:16px;font-weight:600;color:var(--teal);line-height:1.4;margin-bottom:2px}
 .rail-label a{color:var(--teal)}
+.rail-label a:hover{color:var(--ink)}
 .rail-label--quiet{border-top-color:var(--hair)}
 .band .rail-label{border-top-color:rgba(255,255,255,.3);color:var(--on-dark-2)}
-.band .rail-label b{color:#fff}
+.band .rail-label b,.band .rail-label h2{color:#fff}
+.band .rail-label a{color:#fff}   /* teal links vanished on the teal band */
+.band .rail-label a:hover{color:var(--sand)}
 .crumbs{font-size:12px;line-height:1.8;color:var(--grey)}
 .crumbs a{color:var(--grey)}.crumbs a:hover{color:var(--teal)}
 .crumbs [aria-current]{color:var(--ink)}
-.band .crumbs,.band .crumbs a{color:var(--on-dark-2)}.band .crumbs [aria-current]{color:#fff}
+.band .crumbs,.band .crumbs a{color:var(--on-dark-2)}.band .crumbs [aria-current]{color:#fff}.band .crumbs a:hover{color:#fff}
 
 /* byline */
 .byline{display:flex;gap:12px;align-items:baseline;font-size:12px;color:var(--mid);border-top:1px solid var(--hair);padding-top:8px;margin-top:10px}
 .byline b{font-weight:500;color:var(--ink)}
-.byline time{color:var(--grey)}
+.byline time{color:var(--grey);white-space:nowrap}
 .band .byline{border-top-color:rgba(255,255,255,.26);color:#CFD9DA}
 .band .byline b{color:#fff}.band .byline time{color:var(--on-dark-2)}
 
@@ -192,6 +220,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .idx{display:flex;gap:22px;align-items:baseline;border-top:1px solid var(--hair);padding:14px 0}
 .idx>i{font-style:normal;flex:0 0 26px;font-size:12px;font-weight:600;color:var(--sand)}
 .idx>b{flex:1;font-size:21px;font-weight:600;line-height:1.5}
+.idx>.meta{flex:0 0 auto}
 .idx:hover>b{color:var(--teal)}
 
 /* figures (numbers) */
@@ -208,6 +237,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .btn--ghost{background:transparent;color:var(--teal)}
 .btn--ghost:hover{background:var(--teal);color:#fff}
 .btn--block{width:100%}
+.btn[aria-pressed="true"]{background:transparent;color:var(--teal)}   /* following: the state reads at a glance */
+.btn[aria-pressed="true"]:hover{background:var(--paper)}
 .link-accent{display:inline-block;font-size:14px;font-weight:600;color:var(--teal);border-bottom:2px solid var(--sand);padding-bottom:3px}
 .band .link-accent{color:#fff}
 .link-quiet{font-size:13px;color:var(--mid)}
@@ -248,12 +279,18 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* pager */
 .pager{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .pager a,.pager span{display:flex;align-items:center;justify-content:center;min-width:38px;height:38px;border:1px solid var(--hair);font-size:14px;padding:0 10px}
-.pager a:hover{border-color:var(--teal);color:var(--teal)}
+.pager a:not([aria-current]):hover{border-color:var(--teal);color:var(--teal)}   /* the current page is teal already */
 .pager [aria-current="page"]{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
-.pager .pager__next{border:0;color:var(--mid);padding-inline-start:14px}
+.pager .pager__next,.pager .pager__prev{border:0;color:var(--mid);padding-inline:12px}
+.pager .pager__prev[aria-disabled]{color:#B9BCBC}
+.pager .pager__gap{border:0;min-width:18px;padding:0;color:var(--grey)}
+.pager .pager__info{border:0;font-size:12px;color:var(--grey);padding-inline-start:10px}
+.pager a{font-variant-numeric:tabular-nums}
 
 /* forms */
-.search-form{display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--hair);padding-bottom:12px}
+.search-form{position:relative;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--hair);padding-bottom:12px}
+.search-form::after{content:"";position:absolute;inset-inline:0;bottom:-1px;height:2px;background:var(--sand);opacity:0;transform-origin:var(--start) center}
+.search-form:focus-within::after{opacity:1}   /* the input drops its outline; this line is its focus indicator */
 .search-form label{font-size:13px;font-weight:600;color:var(--teal);white-space:nowrap}
 .search-form input{flex:1;min-width:0;border:0;outline:0;background:transparent;font-family:var(--disp);font-size:21px;color:var(--ink);padding:6px 0}
 
@@ -278,7 +315,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .ticker .l{padding-block:14px}
 .ticker__items{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px}
 .ticker__items a{display:block;padding-inline-start:18px;border-inline-start:1px solid var(--hair);font-size:13.5px;font-weight:500;line-height:1.5}
-.ticker__items time{display:block;font-size:10.5px;color:var(--grey);font-weight:400}
+.ticker__items time{display:block;font-size:11px;color:var(--grey);font-weight:400}
 
 /* article */
 .art-hero{margin-top:30px}
@@ -323,7 +360,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .arow i{font-style:normal;font-size:13px;font-weight:600;color:var(--sand)}
 .arow b{font-size:18px;font-weight:600;line-height:1.5}
 .arow .kicker{font-size:11.5px}
-.arow span:last-child{font-size:12px;color:var(--mid);text-align:end}
+.arow>span:last-of-type{font-size:12px;color:var(--mid);text-align:end}   /* the author; the stretched link is the last child */
 .arow:hover b{color:var(--teal)}
 .month[data-open="false"] .month__body{display:none}
 .month__toggle{display:flex;justify-content:space-between;align-items:baseline;width:100%;background:none;border:0;border-top:1px solid var(--ink);padding:16px 0 4px;text-align:start}
@@ -342,19 +379,22 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* 9. Responsive ------------------------------------------------------------- */
 @media (max-width:1199px){
   :root{--gap:32px;--rail:140px;--axis-x:156px}
-  .nav{gap:22px}
 }
 @media (max-width:1023px){
   :root{--gap:24px;--axis-x:-12px}
   .l{grid-template-columns:minmax(0,1fr);row-gap:18px}
   .rail:empty{display:none}
   .wedge{inset-inline-start:-12px}
-  .nav,.site-header__tools .hide-tablet{display:none}
+  :root{--sub-h:42px;--stick-h:42px}
+  .site-header__tools .hide-tablet{display:none}
   .burger{display:inline-flex}
-  .site-header__sub{display:flex;gap:20px;overflow-x:auto;white-space:nowrap;border-top:1px solid rgba(255,255,255,.2);height:40px;align-items:center;scrollbar-width:none}
-  .site-header__sub::-webkit-scrollbar{display:none}
-  .site-header__sub a{font-size:13px;color:var(--on-dark);padding-block:11px 9px;border-bottom:2px solid transparent}
-  .site-header__sub a[aria-current="page"]{color:#fff;font-weight:600;border-bottom-color:var(--sand)}
+  .site-header__subin{grid-template-columns:minmax(0,1fr) auto;column-gap:8px}
+  .site-header__mark{display:none}
+  .site-header__secs{justify-content:flex-start;gap:22px;overflow-x:auto;scrollbar-width:none}
+  .site-header__secs::-webkit-scrollbar{display:none}
+  .site-header__secs a{font-size:14px;padding-block:10px 9px}
+  .site-header__acts{display:none}
+  .site-header.is-stuck .site-header__acts{display:flex}
   .ticker__items{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ticker__items a:nth-child(n+3){display:none}
   .cols-4{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -387,16 +427,15 @@ button{font:inherit;color:inherit;cursor:pointer}
   .res-compact .line>:first-child{display:none}
   .res-compact .line b{font-size:15.5px}
   .arow{grid-template-columns:22px minmax(0,1fr);gap:12px}
-  .arow span:last-child{display:none}
+  .arow>span:last-of-type{display:none}
   .arow b{font-size:15.5px}
   .site-footer__row{flex-direction:column;align-items:flex-start}
   .hide-mobile{display:none!important}
   .hide-desktop{display:block}
   .stat b{font-size:28px}
   .t-mega{font-size:clamp(64px,26vw,110px)}
-}
-@media (prefers-reduced-motion:no-preference){
-  .story__title,.idx>b,.arow b,.btn,.social a{transition:color .15s,background-color .15s,border-color .15s}
+  .idx{flex-wrap:wrap;row-gap:2px}
+  .idx>.meta{flex:1 1 100%;padding-inline-start:48px}   /* under the title, past the numeral */
 }
 
 /* 10. Home ------------------------------------------------------------------ */
@@ -425,8 +464,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .news-item__where time{display:block;font-weight:400;color:var(--on-dark-2);margin-top:2px}
 .news-item b{display:block;font-size:17px;font-weight:600;line-height:1.5}
 .news-item p{font-family:var(--body);font-size:15.5px;line-height:1.8;color:#CFD9DA;margin-top:6px}
-.xfeed a{display:block;border-top:1px solid rgba(255,255,255,.18);padding:11px 0;font-size:13.5px;line-height:1.55;color:var(--on-dark)}
-.xfeed a small{display:block;font-size:11px;color:var(--on-dark-2);margin-top:3px}
+.xfeed{margin:0;padding:0;list-style:none}
 .home-people{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:var(--gap);align-items:start}
 .pull-up{margin-top:-150px;position:relative;z-index:2}
 .authors-row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:26px}
@@ -475,6 +513,8 @@ button{font:inherit;color:inherit;cursor:pointer}
   .news-item{grid-template-columns:1fr;gap:6px}
   .authors-row{grid-template-columns:repeat(2,minmax(0,1fr))}
   .about-3{grid-template-columns:1fr}
+  .archive-bar form{flex-wrap:wrap}
+  .archive-bar form>.meta{flex-basis:100%}
 }
 
 /* 11. Clickable story without nested links --------------------------------
@@ -496,7 +536,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .art-author{border-top:1px solid var(--ink);padding-top:11px;margin-top:22px}
 .art-author a{display:block;font-size:17px;font-weight:600}
 .art-author a:hover{color:var(--teal)}
-.toc{position:sticky;top:20px}
+.toc{position:sticky;top:calc(var(--stick-h) + 20px)}
 .intro-first{font-family:var(--body);font-size:clamp(19px,1.9vw,23px);line-height:1.85;margin-bottom:28px}
 .art-body{max-width:880px;margin-inline-start:auto}
 .lede-col{max-width:700px}
@@ -505,7 +545,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .margin-fig b small{font-size:17px;font-weight:400;padding-inline-start:6px}
 .margin-fig p{font-size:13px;color:var(--mid);line-height:1.7;margin-top:10px}
 .break-h{font-size:clamp(28px,3vw,40px);font-weight:700;line-height:1.45;max-width:700px}
-.break-grid{display:grid;grid-template-columns:minmax(0,496fr) minmax(0,340fr);gap:44px;margin-top:24px;align-items:start}
+.break-grid{display:grid;grid-template-columns:minmax(0,496fr) minmax(0,340fr);gap:44px;margin:24px 0;align-items:start}
 .two-cases{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap)}
 .two-cases .kicker{display:block;padding-bottom:9px;border-bottom:1px solid var(--ink);margin-bottom:16px}
 .remedy{display:grid;grid-template-columns:var(--rail) minmax(0,560fr) minmax(0,440fr);column-gap:var(--gap);align-items:start}
@@ -527,6 +567,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   .epigraph{gap:14px;margin-top:22px;padding-top:18px}
   .epigraph svg{width:26px;height:auto}
   .break-grid,.two-cases,.remedy,.next-read{grid-template-columns:1fr}
+  .break-grid{margin-bottom:16px}
   .margin-fig{margin-top:8px;margin-bottom:24px}
   .sources-box{padding:20px 18px}
   .author-strip{grid-template-columns:1fr}
@@ -537,7 +578,13 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 /* 13. Category ------------------------------------------------------------- */
 .cat-head .body{border-bottom:2px solid var(--ink);padding-bottom:0}
-.cat-head__row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.cat-head__row{display:grid;grid-template-columns:168px minmax(0,1fr);column-gap:28px;row-gap:22px;align-items:end}
+.cat-head__row>*{min-width:0}
+.cat-head__art{margin:0;line-height:0}
+.cat-head__art .secart{width:168px}
+.cat-head__desc{font-family:var(--body);font-size:clamp(20px,2vw,26px);line-height:1.6}
+.cat-head__info .meta{margin-top:6px}
+.cat-head__row .tabs{grid-column:1/-1}
 .cat-head .tabs{border-bottom:0}
 .cat-hero__img{width:100%;aspect-ratio:2.35/1;object-fit:cover}
 .cat-hero__text{display:grid;grid-template-columns:minmax(0,600fr) minmax(0,400fr);gap:var(--gap);margin-top:18px;align-items:start}
@@ -559,6 +606,8 @@ button{font:inherit;color:inherit;cursor:pointer}
   .cat-edit>:first-child{max-width:220px}
   .cat-files{flex-wrap:wrap}.cat-files>:nth-child(1){width:170px}.cat-files>:nth-child(2){width:130px}.cat-files>:nth-child(3){flex:1 1 100%}
   .textrow{grid-template-columns:1fr;gap:4px}
+  .cat-head__row{grid-template-columns:104px minmax(0,1fr);column-gap:16px}
+  .cat-head__art .secart{width:104px}
 }
 
 /* 14. Search ---------------------------------------------------------------- */
@@ -648,4 +697,432 @@ button{font:inherit;color:inherit;cursor:pointer}
   .ar-rhythm b{font-size:40px}
   .ar-strip{overflow-x:auto;gap:14px;margin-inline:calc(-1*var(--pad));padding-inline:var(--pad)}
   .ar-strip>*{flex:0 0 140px}.ar-strip>.is-cover{flex-basis:220px}
+}
+
+/* 18. Motion & interaction ---------------------------------------------------
+   One idea, carried through: the wedge (وتد) is driven into the axis, and a
+   board (لوح) can be lifted off the wall. Everything else is quiet feedback.
+   Colour and opacity changes run for everyone; anything that moves sits behind
+   prefers-reduced-motion:no-preference. Nothing starts hidden unless watad.js
+   has already taken charge of revealing it (sections 11-14 there). */
+
+/* feedback: colour */
+.site-header__tools a,.site-header__secs a,.icon-btn,.story__title,.idx>b,.arow b,.tab,.chip,.viewbtn,.facet__opt span,.link-quiet,.link-accent,.crumbs a,.toc a,.terms a,.xfeed a,.ticker__items a,.wiki-table a,.rail-label a,.art-author a,.byline b,.site-footer__links a,.authors-row b,.btn,.social a,.pager a{transition:color .2s,background-color .2s,border-color .2s}
+.site-header__tools a:hover,.site-header__secs a:hover,.xfeed a:hover{color:#fff}
+.ticker__items a:hover{color:var(--teal)}
+.authors-row a:hover b{color:var(--sand)}
+
+/* the selection language: a sand line under the chosen item; hover previews it at half strength */
+.site-header__tools a,.site-header__secs a,.tab,.chip,.viewbtn,.link-accent,.toc a{position:relative}
+.site-header__tools a::after,.site-header__secs a::after,.tab::after,.chip::after,.viewbtn::after{content:"";position:absolute;inset-inline:0;bottom:-2px;height:2px;background:var(--sand);opacity:0;transform-origin:var(--start) center;transition:opacity .2s,transform .4s var(--ease-out);pointer-events:none}
+.site-header__tools a[aria-current]::after,.site-header__secs a[aria-current]::after,.tab.is-active::after,.tab[aria-selected="true"]::after,.chip.is-active::after,.viewbtn.is-active::after{display:none}
+/* accent links redraw their line in the text colour; the chapter in view is underlined in the contents */
+.link-accent::after{content:"";position:absolute;inset-inline:0;bottom:-2px;height:2px;background:currentColor;opacity:0;transform-origin:var(--start) center;transition:opacity .2s,transform .45s var(--ease-out);pointer-events:none}
+.toc a::after{content:"";position:absolute;inset-inline:0;bottom:-1px;height:2px;background:var(--sand);opacity:0;transform-origin:var(--start) center;transition:opacity .25s,transform .5s var(--ease-out)}
+.toc a.is-active::after{opacity:1}
+@media (hover:hover){
+  .site-header__tools a:hover::after,.site-header__secs a:hover::after,.tab:hover::after,.chip:hover::after,.viewbtn:hover::after{opacity:.55}
+  .link-accent:hover::after,a:hover>.link-accent::after,.month__toggle:hover .link-accent::after{opacity:1}
+}
+
+/* images arrive instead of popping (the class is only ever set by watad.js) */
+img{transition:opacity .6s var(--ease-out)}
+img.is-loading{opacity:0}
+
+/* boards: a sand frame stands off the poster. Posters are always shown whole, so they never crop or zoom. */
+.story>img.poster:first-child{outline:1px solid transparent;outline-offset:6px;transition:outline-color .3s,outline-offset .5s var(--ease-out),opacity .45s var(--ease-out)}
+@media (hover:hover){.story:hover>img.poster:first-child{outline-color:var(--sand)}}
+/* in teal bands the board lifts off the wall and follows the pointer (watad.js 11); the others step back */
+.lift>img.poster{transform-origin:50% 100%}   /* it stands on its base like a planted board, so the label under it stays clear */
+.lift.is-lifted{z-index:3}
+.band .lift.is-lifted>img.poster:first-child{outline-color:var(--sand)}
+.has-lift .lift:not(.is-lifted)>img.poster{opacity:.45}
+.read-progress{position:fixed;top:var(--stick-h);inset-inline:0;height:3px;background:var(--sand);transform:scaleX(0);transform-origin:var(--start) center;z-index:45;pointer-events:none}
+.read-progress.is-timeline{animation:read-grow linear both;animation-timeline:scroll(root block)}   /* range set by watad.js 14 */
+
+@media (prefers-reduced-motion:no-preference){
+  html{scroll-behavior:smooth}
+  @view-transition{navigation:auto}
+  ::view-transition-old(root){animation-duration:.2s}
+  ::view-transition-new(root){animation-duration:.35s}
+
+  /* signature: the axis is drawn down the first screen, and each wedge is driven into it */
+  .axis{animation:axis-draw 1.4s var(--ease-out) backwards}
+  .wedge>svg,.epigraph>svg{animation:wedge-in .7s .55s backwards}
+  .wedge.is-waiting>svg{opacity:0;animation:none}
+  .wedge.is-waiting.is-in>svg{opacity:1;animation:wedge-in .7s backwards}
+  .ab-mark__art.is-waiting path{opacity:0}
+  .ab-mark__art.is-in path{opacity:1;animation:fade-in .8s var(--ease-out) backwards}
+  .ab-mark__art.is-in path[fill="#B9A779"]{animation:mark-cut .9s .3s backwards}   /* the sharp angle: where the peg enters the ground */
+  .ar-rhythm i::after{transform-origin:var(--start) center;animation:bar-grow 1.1s .35s var(--ease-out) backwards}
+  .ar-rhythm>div:nth-child(2) i::after{animation-delay:.45s}
+  .ar-rhythm>div:nth-child(3) i::after{animation-delay:.55s}
+
+  /* lines draw from the start edge */
+  .site-header__tools a::after,.site-header__secs a::after,.tab::after,.chip::after,.viewbtn::after,.link-accent::after,.toc a::after,.search-form::after{transform:scaleX(0)}
+  .toc a.is-active::after,.search-form:focus-within::after{transform:none}
+  .search-form::after{transition:opacity .2s,transform .5s var(--ease-out)}
+
+  /* menu and search: a teal curtain drops from the top, then the items land in order.
+     The curtain is a transform on its own layer, so the full-screen panel is never repainted per frame. */
+  .drawer{background:transparent;transition:display .34s allow-discrete}
+  .drawer::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--teal);transform-origin:top;transform:scaleY(0);transition:transform .34s var(--ease-in)}
+  .drawer.is-open::before{transform:none;transition:transform .55s var(--ease-out)}
+  @starting-style{.drawer.is-open::before{transform:scaleY(0)}}
+  .drawer>*{transition:opacity .14s var(--ease-in)}
+  .drawer:not(.is-open)>*{opacity:0}   /* on close the items go first, then the curtain rises */
+  .drawer.is-open .drawer__top{animation:fade-in .45s .12s var(--ease-out) backwards}
+  .drawer.is-open nav a,.drawer.is-open .drawer__more{animation:drop-in .6s var(--ease-out) backwards}
+  .drawer.is-open nav a:nth-child(2){animation-delay:.03s}.drawer.is-open nav a:nth-child(3){animation-delay:.06s}
+  .drawer.is-open nav a:nth-child(4){animation-delay:.09s}.drawer.is-open nav a:nth-child(5){animation-delay:.12s}
+  .drawer.is-open nav a:nth-child(6){animation-delay:.15s}.drawer.is-open nav a:nth-child(7){animation-delay:.18s}
+  .drawer.is-open nav a:nth-child(n+8),.drawer.is-open .drawer__more{animation-delay:.21s}
+  .search-overlay{opacity:0;transition:opacity .22s var(--ease-in),display .22s allow-discrete}
+  .search-overlay.is-open{opacity:1;transition:opacity .35s var(--ease-out),display .35s allow-discrete}
+  @starting-style{.search-overlay.is-open{opacity:0}}
+  .search-overlay.is-open form{animation:rise .6s .05s var(--ease-out) backwards}
+
+  /* press */
+  .btn,.icon-btn,.social a,.pager a{transition:color .2s,background-color .2s,border-color .2s,transform .16s var(--ease-out)}
+  .btn:active,.icon-btn:active,.social a:active,.pager a:active{transform:scale(.96)}
+}
+
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  .site-header__tools a:hover::after,.site-header__secs a:hover::after,.tab:hover::after,.chip:hover::after,.viewbtn:hover::after,.link-accent:hover::after,a:hover>.link-accent::after,.month__toggle:hover .link-accent::after{transform:none}
+  /* covers (16:9, allowed to crop) drift closer inside a fixed frame: the clip shrinks as the image grows */
+  .story .cover,.story .cat-hero__img{clip-path:inset(0);transition:transform 1.2s var(--ease-out),clip-path 1.2s var(--ease-out),opacity .6s var(--ease-out)}
+  .story:hover :is(.cover,.cat-hero__img),.story:has(.stretched:focus-visible) :is(.cover,.cat-hero__img){transform:scale(1.045);clip-path:inset(2.153%)}
+  .story>img.poster:first-child{outline-offset:0}
+  .story:hover>img.poster:first-child{outline-offset:6px}
+  .band .lift.is-lifted>img.poster:first-child{outline-offset:7px}
+  /* list rows lean a step into the reading direction */
+  .idx>b,.arow b{transition:color .2s,translate .5s var(--ease-out)}
+  .idx:hover>b,.arow:hover b{translate:calc(5px * var(--dir)) 0}
+}
+
+@keyframes axis-draw{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 calc(100% - 100vh) 0)}}
+@keyframes wedge-in{
+  0%{opacity:0;transform:translateY(-22px);animation-timing-function:cubic-bezier(.55,0,1,.45)}
+  55%{opacity:1;transform:translateY(2px);animation-timing-function:cubic-bezier(.16,1,.3,1)}
+  100%{opacity:1;transform:none}
+}
+@keyframes mark-cut{
+  0%{opacity:0;transform:translate(10px,-4px);animation-timing-function:cubic-bezier(.55,0,1,.45)}
+  60%{opacity:1;transform:translate(-.4px,.15px);animation-timing-function:cubic-bezier(.16,1,.3,1)}
+  100%{opacity:1;transform:none}
+}
+@keyframes bar-grow{from{transform:scaleX(0)}}
+@keyframes read-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes fade-in{from{opacity:0}}
+@keyframes drop-in{from{opacity:0;transform:translateY(-12px)}}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}}
+
+/* 19. Breaking news (عاجل) ----------------------------------------------------
+   The wire is live. The headlines take turns: the current one is inked in
+   reading direction while a sand line runs down its edge, then it hands over
+   and the sand wedge beside the label beats once. Below 1024px it is one slot
+   that drops each headline in (swipe, next, "1 من 5"); stepping by hand stops
+   the auto-turn. Hover and keyboard focus hold it; it rests off screen.
+   watad.js 15 drives it; without JS it is the plain list, and with reduced
+   motion nothing advances on its own. */
+.ticker__rail{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:8px}
+.ticker__rail .cap{grid-column:1/-1}
+.ticker__label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600}
+.ticker__live{display:block;line-height:0}
+.ticker__live svg{display:block;overflow:visible}
+.ticker__live path{fill:var(--sand)}
+.ticker__echo{opacity:0}
+.ticker__ctrl{grid-column:2;grid-row:1;display:flex;align-items:center;gap:6px}
+.ticker__count{font-size:11px;color:var(--grey);font-variant-numeric:tabular-nums;white-space:nowrap;padding-inline-end:4px}
+.ticker__btn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--hair);background:#fff;color:var(--teal);transition:border-color .2s,background-color .2s,color .2s}
+.ticker__btn:hover{border-color:var(--teal)}
+.ticker__btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:square}
+.ticker__items a{position:relative}
+.ticker__items a::before{content:"";position:absolute;inset-inline-start:-1px;top:0;width:2px;height:100%;background:var(--sand);transform:scaleY(0);transform-origin:top;pointer-events:none}
+.ticker.is-auto .ticker__items a.is-current::before{animation:tick-run 6s linear forwards}
+.ticker.is-offscreen .ticker__items a::before,.ticker.is-auto:has(.ticker__items a:focus-visible) .ticker__items a::before{animation-play-state:paused}
+@media (hover:hover){.ticker.is-auto .ticker__items:hover a::before{animation-play-state:paused}}   /* reading holds it; a tapped button does not */
+@media (min-width:1024px){
+  .ticker__ctrl{display:none}   /* all five headlines are on screen */
+  .ticker.is-auto .ticker__items a{color:var(--mid);transition:color .5s}
+  .ticker.is-auto .ticker__items a.is-current{color:var(--ink)}
+  .ticker.is-auto .ticker__items a.is-current time{color:var(--teal)}
+  .ticker.is-auto .ticker__items a:hover{color:var(--teal)}
+}
+@media (max-width:1023px){
+  .ticker__rail{display:flex;align-items:center;gap:14px}
+  .ticker__ctrl{margin-inline-start:auto}
+  .ticker__btn{width:32px;height:32px}
+  .ticker.is-live .ticker__items{grid-template-columns:minmax(0,1fr);touch-action:pan-y}
+  .ticker.is-live .ticker__items a{display:block;grid-area:1/1;opacity:0;pointer-events:none}
+  .ticker.is-live .ticker__items a.is-current{opacity:1;pointer-events:auto;z-index:1}
+  .ticker__items a::before{inset-inline:0;top:auto;bottom:-15px;width:auto;height:2px;transform:scaleX(0);transform-origin:var(--start) center}   /* runs along the ticker's bottom rule */
+  .ticker.is-auto .ticker__items a.is-current::before{animation-name:tick-run-x}
+}
+.ticker__live path{transform-box:fill-box;transform-origin:50% 70%}
+@media (prefers-reduced-motion:no-preference){
+  /* the timeline page's live mark beats once on arrival; the ticker's beats on each handover (watad.js 15) */
+  .tl-live .ticker__live path:last-child{animation:beat 2.6s .6s}
+  .tl-live .ticker__echo{animation:echo 2.6s .6s var(--ease-out)}
+}
+@media (min-width:1024px) and (prefers-reduced-motion:no-preference){
+  /* the wire comes online: headlines feed in from the start edge */
+  .ticker__items a{animation:feed .6s var(--ease-out) backwards}
+  .ticker__items a:nth-child(2){animation-delay:.07s}.ticker__items a:nth-child(3){animation-delay:.14s}
+  .ticker__items a:nth-child(4){animation-delay:.21s}.ticker__items a:nth-child(n+5){animation-delay:.28s}
+  @supports ((-webkit-background-clip:text) or (background-clip:text)){
+    /* ink passes through the headline in reading direction: mid, then ink, then mid again as it hands over */
+    .ticker.is-auto .ticker__items a{background-image:linear-gradient(90deg,var(--mid) 33.34%,var(--ink) 33.34% 66.66%,var(--mid) 66.66%);background-size:300% 100%;background-position:0 0;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .ticker.is-auto .ticker__items a time{-webkit-text-fill-color:currentColor}
+    .ticker.is-auto .ticker__items a.is-current{animation:feed .6s var(--ease-out) backwards,ink-in .9s var(--ease-out) forwards}
+    .ticker.is-auto .ticker__items a.is-leaving{animation:feed .6s var(--ease-out) backwards,ink-out .7s var(--ease-in) forwards}
+    .ticker.is-auto .ticker__items a:hover{-webkit-text-fill-color:var(--teal)}
+  }
+}
+@media (max-width:1023px) and (prefers-reduced-motion:no-preference){
+  .ticker.is-live .ticker__items a.is-current:not(.is-still){animation:tick-in .55s var(--ease-out) both}
+  .ticker.is-live .ticker__items a.is-leaving{animation:tick-out .28s var(--ease-in) both}
+}
+/* the ink sweep paints text with a background; print and forced colours drop backgrounds, so give the text its colour back */
+@media print,(forced-colors:active){.ticker .ticker__items a{background:none!important;-webkit-text-fill-color:currentColor!important}}
+@keyframes beat{0%,32%,100%{transform:none}7%{transform:scale(1.3)}15%{transform:scale(.94)}23%{transform:scale(1.14)}}
+@keyframes echo{0%{opacity:.55;transform:none}55%,100%{opacity:0;transform:scale(3)}}
+@keyframes tick-run{to{transform:scaleY(1)}}
+@keyframes tick-run-x{to{transform:scaleX(1)}}
+@keyframes feed{from{opacity:0;transform:translateX(calc(-14px * var(--dir)))}}
+@keyframes ink-in{from{background-position:0 0}to{background-position:50% 0}}
+@keyframes ink-out{from{background-position:50% 0}to{background-position:100% 0}}
+@keyframes tick-in{0%{opacity:0;transform:translateY(-14px)}60%{opacity:1;transform:translateY(1px)}100%{opacity:1;transform:none}}
+@keyframes tick-out{to{opacity:0;transform:translateY(10px)}}
+
+/* 20. Section title artwork (عناوين الاقسام) ---------------------------------
+   The designer letters each section's name and the admin uploads it; it then
+   replaces .secart__art as an img whose alt is the section name, at the same square. Until
+   then these are typographic placeholders in the brand colours; the words
+   scale with the card (container units), so one card serves every size. */
+.secart{position:relative;display:block;aspect-ratio:1;overflow:hidden;container-type:inline-size;isolation:isolate;outline:1px solid transparent;outline-offset:6px;transition:outline-color .3s,outline-offset .5s var(--ease-out)}
+.secart>img{display:block;width:100%;height:100%;object-fit:cover}
+.secart__art{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5cqi}
+.secart__word{position:relative;z-index:1;font-size:27cqi;font-weight:700;line-height:1;white-space:nowrap}
+.secart__sub{position:relative;z-index:1;font-size:11cqi;font-weight:600;line-height:1}
+.secart__deco{position:absolute;inset:0;width:100%;height:100%;z-index:0;transition:transform .7s var(--ease-out)}
+.secart__num{position:absolute;top:10cqi;inset-inline-start:10cqi;font-size:7.5cqi;font-weight:600;color:var(--sand);font-variant-numeric:tabular-nums;direction:ltr}
+.secart--binaa{background:var(--teal);color:var(--sand)}
+.secart--binaa .secart__deco{color:var(--sand);opacity:.6}
+.secart--siyasa{background:var(--sand);color:var(--teal)}
+.secart--siyasa .secart__cut{inset:auto;top:13%;inset-inline-start:9%;width:78%;height:auto;color:var(--teal)}
+.secart--wiki{background:var(--ink);color:#fff}
+.secart--wiki .secart__sub{color:var(--sand)}
+.secart--wiki .secart__deco{color:#fff;opacity:.3}
+.secart--nas{background:var(--paper);color:var(--teal)}
+.secart__crowd path{fill:rgba(12,77,90,.13)}
+.secart__crowd .is-one{fill:var(--sand)}
+.secart--news{background:#093C47;color:#fff}
+.secart--news .secart__sub{color:var(--sand)}
+.secart__quote{inset:auto;top:11%;inset-inline-end:11%;width:15%;height:auto;color:var(--sand)}
+.secarts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:20px}
+.secarts>*{min-width:0}
+@media (hover:hover){a.secart:hover{outline-color:var(--sand)}}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  a.secart{outline-offset:0}
+  a.secart:hover{outline-offset:6px}
+  a.secart:hover .secart__deco{transform:translateX(calc(4cqi * var(--dir)))}
+  .secart--nas:hover .secart__crowd{transform:translateY(-3cqi)}
+  .secart--news:hover .secart__quote{transform:translateY(-3cqi)}
+}
+@media (max-width:767px){
+  .secarts{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin-inline:calc(-1 * var(--pad));padding:8px var(--pad);scrollbar-width:none}
+  .secarts::-webkit-scrollbar{display:none}
+  .secarts>*{flex:0 0 40%;scroll-snap-align:start}
+}
+
+/* 21. Section list (مواد القسم) ------------------------------------------------
+   The client's format: square picture at the start, title, dek, then the
+   writer with an avatar. Covers crop into the square; posters stay whole in
+   it; text-only pieces get the quote mark. Two columns, then one. */
+.alist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--gap);border-top:1px solid var(--ink)}
+.aitem{display:grid;grid-template-columns:128px minmax(0,1fr);column-gap:22px;align-content:start;padding:22px 0;border-bottom:1px solid var(--hair)}
+.aitem>*{min-width:0}
+.aitem__thumb{grid-column:1;grid-row:1/span 4;display:block;aspect-ratio:1;overflow:hidden;background:var(--paper)}
+.aitem__thumb img{width:100%;height:100%;object-fit:cover}
+.aitem__thumb img.poster{aspect-ratio:auto;object-fit:contain}
+.aitem__thumb--text{display:grid;place-items:center}
+.aitem__kicker,.aitem__title,.aitem__dek,.aitem__by{grid-column:2}
+.aitem__title{font-size:clamp(17px,1.45vw,19.5px);font-weight:700;line-height:1.5;margin-top:4px}
+.aitem__dek{font-family:var(--body);font-size:15.5px;line-height:1.8;color:#3A3A40;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.aitem__by{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin-top:12px;font-size:12px;color:var(--grey)}
+.aitem__by b{font-weight:600;color:var(--teal)}
+.aitem__by time{white-space:nowrap}
+.avatar{flex:0 0 auto;width:26px;height:26px;display:inline-grid;place-items:center;background:var(--teal);color:#fff;font-size:12.5px;font-weight:700;line-height:1}
+.alist-foot{display:flex;justify-content:space-between;align-items:center;gap:16px 24px;flex-wrap:wrap;margin-top:32px}
+@media (max-width:1023px){.alist{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:767px){
+  .aitem{grid-template-columns:92px minmax(0,1fr);column-gap:14px;padding:18px 0}
+  .aitem__title{font-size:16px}
+  .aitem__dek{font-size:14.5px}
+  .pager a:not([aria-current]):not(.pager__next),.pager .pager__gap{display:none}   /* previous, this page, next, and where you are */
+}
+
+/* 22. خبر وتعليق timeline ------------------------------------------------------
+   Posts hang on a spine at the start edge, each with a sand wedge where it
+   meets the line; the day label rides along under the sticky header. The
+   headline opens the post in a popup (its single page, watad.js 18). */
+.tl{position:relative;margin:0;padding:0;list-style:none}
+.tl::before{content:"";position:absolute;top:0;bottom:0;inset-inline-start:16px;width:1px;background:var(--hair)}
+.tl__day{position:sticky;top:calc(var(--stick-h) + 10px);z-index:2;padding:22px 0 8px}
+.tl__day span{display:inline-block;background:var(--teal);color:#fff;font-size:12px;font-weight:600;line-height:1.5;padding:5px 12px}
+.tl__item{position:relative;padding:20px 0 22px;padding-inline-start:52px;border-bottom:1px solid var(--hair)}
+.tl__item::before{content:"";position:absolute;inset-inline-start:11px;top:30px;width:11px;height:14.5px;background:url(../img/brand/wedge-quote.svg) no-repeat center/contain}
+.post__head{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;font-size:12.5px;color:var(--grey)}
+.post__avatar{width:34px;height:34px;flex:0 0 auto;display:grid;place-items:center;background:var(--teal)}
+.post__name{font-size:14px;font-weight:700;color:var(--ink)}
+.post__place{font-weight:600;color:var(--teal)}
+.post__head time{font-variant-numeric:tabular-nums}
+.post__news{font-size:clamp(18px,1.7vw,22px);font-weight:700;line-height:1.55;margin-top:12px}
+.post__news a:hover{color:var(--teal)}
+.post__comment{max-width:680px;margin-top:14px;padding-top:10px;border-top:2px solid var(--sand)}
+.post__label{display:block;margin-bottom:4px;font-size:11.5px;font-weight:600;color:var(--teal)}
+.post__comment p{font-family:var(--body);font-size:17.5px;line-height:1.85;color:#3A3A40}
+.post__acts{display:flex;flex-wrap:wrap;gap:4px 22px;margin-top:12px}
+.post__btn{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0;background:none;border:0;font-size:12.5px;color:var(--mid)}
+.post__btn svg{width:17px;height:17px}
+.post__btn:hover,.post__btn.is-done{color:var(--teal)}
+.tl-live{display:inline-flex;align-items:center;gap:7px;color:var(--teal);font-weight:600}
+@media (max-width:767px){
+  .tl::before{inset-inline-start:9px}
+  .tl__item{padding-inline-start:32px}
+  .tl__item::before{inset-inline-start:4px}
+}
+
+/* 23. Popups (dialog) -----------------------------------------------------------
+   Native <dialog>: focus stays inside, Esc closes, focus goes back. A click
+   on the veil closes too (watad.js 17). On phones it is a sheet from below. */
+.modal{width:min(820px,100% - 2 * var(--pad));max-width:none;max-height:min(88vh,920px);margin:auto;padding:0;border:0;background:#fff;color:var(--ink);overflow:auto;overscroll-behavior:contain}
+.modal::backdrop{background:rgba(12,77,90,.88)}
+html:has(dialog[open]){overflow:hidden}
+.modal__head{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 24px;background:#fff;border-bottom:1px solid var(--hair)}
+.modal__head .icon-btn{color:var(--teal)}
+.modal__head .icon-btn:hover{color:var(--ink)}
+.modal__kicker{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--teal)}
+.modal__kicker .post__avatar{width:30px;height:30px}
+.modal__nav{display:flex;gap:2px}
+.modal__title{font-size:22px;font-weight:700}
+.modal__title small{font-size:12px;font-weight:400;color:var(--grey);padding-inline-start:8px}
+.modal__body{padding:28px 32px 34px}
+.nm__meta{font-size:12.5px;color:var(--grey)}
+.nm__meta b{font-weight:600;color:var(--teal)}
+.nm__news{font-size:clamp(24px,2.6vw,34px);font-weight:700;line-height:1.45;margin-top:10px}
+.nm__text p{font-family:var(--body);font-size:19px;line-height:1.9;margin-top:14px}
+.nm__comment{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:start;margin-top:24px;padding-top:18px;border-top:2px solid var(--sand)}
+.nm__comment p{font-family:var(--body);font-size:clamp(19px,1.9vw,23px);line-height:1.8}
+.nm__acts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 24px;margin-top:26px;padding-top:14px;border-top:1px solid var(--hair)}
+@media (max-width:767px){
+  .modal{width:100%;max-height:92vh;margin-block-end:0}
+  .modal__head{padding:8px var(--pad)}
+  .modal__body{padding:22px var(--pad) 28px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .modal{opacity:0;transform:translateY(24px);transition:opacity .22s var(--ease-in),transform .22s var(--ease-in),overlay .22s allow-discrete,display .22s allow-discrete}
+  .modal[open]{opacity:1;transform:none;transition:opacity .4s var(--ease-out),transform .55s var(--ease-out),overlay .4s allow-discrete,display .4s allow-discrete}
+  @starting-style{.modal[open]{opacity:0;transform:translateY(24px)}}
+  .modal::backdrop{opacity:0;transition:opacity .22s,overlay .22s allow-discrete,display .22s allow-discrete}
+  .modal[open]::backdrop{opacity:1;transition:opacity .4s,overlay .4s allow-discrete,display .4s allow-discrete}
+  @starting-style{.modal[open]::backdrop{opacity:0}}
+  .nm.is-swap{animation:fade-in .35s var(--ease-out)}
+}
+
+/* 24. Writers (كتاب وتد) --------------------------------------------------------
+   Each writer's photo, cut out from its background (transparent PNG), stands
+   on a teal tile with the sand wedge behind; the placeholder silhouette holds
+   the place until the real cut-outs arrive. Home shows six and a "click for
+   more" tile that opens the full list; writers.html has everyone. */
+.writer{display:block;min-width:0;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
+.writer__pic{position:relative;display:block;aspect-ratio:4/5;overflow:hidden;background:#0A4450 url(../img/brand/wedge-quote.svg) no-repeat 50% 130%/76% auto;border-bottom:2px solid var(--sand);transition:background-position .7s var(--ease-out)}
+.writer__pic img{position:absolute;bottom:0;inset-inline-start:6%;width:88%;height:auto;transition:transform .6s var(--ease-out)}
+.writer__name{display:block;margin-top:12px;font-size:16.5px;font-weight:700;line-height:1.4}
+.writer__field{display:block;margin-top:3px;font-size:12px;font-weight:600;color:var(--teal)}
+.writer__count{display:block;margin-top:3px;font-size:11px;color:var(--grey)}
+.band .writer__name{color:#fff}
+.band .writer__field{color:var(--sand)}
+.band .writer__count{color:var(--on-dark-2)}
+.writer--more .writer__pic{display:grid;place-content:center;justify-items:center;gap:6px;background:#093C47}
+.writer__plus{font-size:40px;font-weight:700;line-height:1;color:var(--sand);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.writer__all{font-size:13px;font-weight:600;color:#fff}
+.writer--card .writer__latest{display:block;margin-top:12px;padding-top:10px;border-top:1px solid var(--hair);font-size:14px;font-weight:600;line-height:1.55}
+.writer--card .writer__latest .cap{display:block;font-weight:400}
+.writers-row{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:20px;align-items:start}   /* a <button> tile would centre itself in a stretched cell */
+.writers-list,.writers-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px 20px}
+.writers-grid{gap:44px var(--gap)}
+.writers-list .writer__name{font-size:15px}
+@media (hover:hover){
+  .writer:hover .writer__name{color:var(--teal)}
+  .band .writer:hover .writer__name{color:var(--sand)}
+  .writer--card:hover .writer__latest{color:var(--teal)}
+  .writer--more:hover .writer__pic{background:var(--sand)}
+  .writer--more:hover .writer__plus,.writer--more:hover .writer__all{color:var(--teal)}
+}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  .writer:hover .writer__pic img{transform:translateY(-6px)}
+  .writer:hover .writer__pic{background-position:50% 112%}   /* the wedge rises behind the portrait */
+}
+@media (max-width:1199px){.writers-row{grid-template-columns:repeat(4,minmax(0,1fr));row-gap:30px}}
+@media (max-width:767px){.writers-row,.writers-list,.writers-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 16px}}
+
+/* 25. وتد على اكس ----------------------------------------------------------------
+   The last six posts on X, set like the feed they come from. */
+.xside{border-top:1px solid rgba(255,255,255,.5)}
+.xside__head{display:flex;align-items:center;gap:12px;padding:14px 0 12px}
+.xside__logo{flex:0 0 auto;width:34px;height:34px;display:grid;place-items:center;background:#fff;color:var(--teal)}
+.xside__logo svg{width:16px;height:16px}
+.xside__who b{display:block;font-size:14px;color:#fff}
+.xside__who span{display:block;font-size:11px;color:var(--on-dark-2)}
+.xside__follow{margin-inline-start:auto;padding:6px 16px;background:#fff;color:var(--teal);font-size:12.5px;font-weight:600;transition:background-color .2s}
+.xside__follow:hover{background:var(--sand)}
+.xpost{display:grid;grid-template-columns:28px minmax(0,1fr);column-gap:10px;padding:12px 0;border-top:1px solid rgba(255,255,255,.16)}
+.xpost__avatar{grid-row:1/span 2;width:28px;height:28px;display:grid;place-items:center;background:rgba(255,255,255,.08)}
+.xpost__text{font-size:13.5px;line-height:1.6;color:var(--on-dark);transition:color .2s}
+.xpost__meta{display:flex;gap:6px;margin-top:4px;font-size:11px;color:var(--on-dark-2)}
+.xpost:hover .xpost__text{color:#fff}
+.news-item b a:hover{color:var(--sand)}
+
+/* 26. Archive by date (التصفح بالتاريخ) -------------------------------------------
+   Year tabs over a month grid: Levantine names with the international ones,
+   the count, and a bar for the month's weight in its year. The chosen month
+   is underlined in sand (watad.js 20 reads ?y=&m=). */
+.arcal__top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px 28px;flex-wrap:wrap;border-bottom:1px solid var(--hair)}
+.arcal__years{flex:1 1 auto;min-width:0;border-bottom:0}
+.arcal__jump{display:flex;align-items:center;gap:8px;padding-bottom:10px}
+.arcal__jump select{max-width:100%;padding:8px 10px;border:1px solid var(--hair);background:#fff;color:var(--ink);font-family:var(--disp);font-size:13px}
+.arcal__grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));column-gap:20px;margin-top:6px}
+.arcal__grid[hidden],.arcal__result[hidden],.arcal__empty[hidden]{display:none}   /* author display rules beat the hidden attribute */
+.tab small,.chip small{unicode-bidi:isolate}   /* "2026" + "96" would otherwise read as one number, 202696 */
+.arcal__m{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;column-gap:8px;padding:14px 0 12px;border-bottom:1px solid var(--hair)}
+.arcal__name{font-size:15px;font-weight:600;line-height:1.4}
+.arcal__alt{grid-column:1;font-size:11px;color:var(--grey)}
+.arcal__n{grid-column:2;grid-row:1/span 2;font-size:26px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.arcal__bar{position:relative;grid-column:1/-1;display:block;height:4px;margin-top:10px;background:var(--paper)}
+.arcal__bar::after{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:var(--w);background:var(--sand)}
+a.arcal__m:hover .arcal__name,a.arcal__m:hover .arcal__n{color:var(--teal)}
+a.arcal__m:hover .arcal__bar::after{background:var(--teal)}
+.arcal__m.is-empty{color:#B9BCBC}
+.arcal__m.is-empty .arcal__alt{color:#C9CCCC}
+.arcal__m[aria-current="true"]{padding-bottom:11px;border-bottom:2px solid var(--sand)}
+.arcal__m[aria-current="true"] .arcal__name,.arcal__m[aria-current="true"] .arcal__n{color:var(--teal)}
+.arcal__m[aria-current="true"] .arcal__bar::after{background:var(--teal)}
+.arcal__filters{margin-top:18px}
+.arcal__result{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 14px;margin-top:26px;padding-top:14px;border-top:2px solid var(--ink)}
+.arcal__result b{font-size:26px;font-weight:700}
+.arcal__result span{font-size:13px;color:var(--mid)}
+.arcal__empty{margin-top:14px;padding:16px 20px;background:var(--paper);font-size:14px;line-height:1.8;color:var(--mid)}
+.month.is-picked .rail-label b{color:var(--teal)!important}
+@media (max-width:1023px){.arcal__grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:767px){
+  .arcal__grid{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:14px}
+  .arcal__name{font-size:13px}
+  .arcal__n{font-size:20px}
+  .arcal__jump{width:100%}
+  .arcal__jump select{flex:1;min-width:0}
+}
+@media (prefers-reduced-motion:no-preference){
+  .arcal__grid:not([hidden]) .arcal__bar::after{transform-origin:var(--start) center;animation:bar-grow .9s var(--ease-out) backwards;animation-delay:calc(var(--i) * 40ms + 150ms)}
 }
