@@ -28,7 +28,7 @@ Open any file directly in the browser. The only external request is Google Fonts
 
 ```
 assets/
-  css/watad.css      one stylesheet, sections numbered 1–40
+  css/watad.css      one stylesheet, sections numbered 1–41
   js/watad.js        vanilla JS, behaviour opt-in via data-attributes
   img/brand/         logo + the six identity marks (SVG)
   img/posts/         demo images (posters 9:16, covers 16:9)
@@ -44,6 +44,7 @@ assets/
 - `.wedge` places one of the six brand marks centred on the axis. Put it inside `.rail`.
 - Body splits: `.split` (600/400), `.split--rev`, `.split--even`, `.cols-3`, `.cols-4`.
 - Breakpoints: **1199 / 1023 / 767**. Below 1024 the rail stacks above the body and the axis moves into the right margin.
+- **Tablet and phone (CSS 41):** on touch screens, small text links, tabs, chips and the header sections carry an invisible hit area around them, so every target is easy to hit without the layout changing. On one column the article head reads section, title, writer, sharing, then the epigraph. Phones get a tighter vertical rhythm, and the archive's month picker keeps the whole month name on its own row. Checked at 360, 390, 768 and 1024 wide, and on a phone held sideways.
 
 ## Design tokens (`:root`)
 
@@ -155,7 +156,7 @@ Still with the client: the designer's section artwork, photos for the 18 writers
 | `data-copy-link="#id"` | Copies this page's address with that anchor |
 | `data-arcal`, `data-year`, `data-year-grid`, `data-key="2026-09"` on `.month` | Archive by date: switches the year and marks the month from `?y=&m=` |
 | `data-archive-filter="section\|type"` + `data-value` on the archive chips | Filters the month rows by their kicker (`سياسة — تحليل`). Also reads `?section=&type=`, which is how "كل مداخل ثورة ويكي" links in. |
-| `data-wiki`, `data-wiki-year` + `data-count`, `data-wiki-search`, `data-wiki-preview`, `data-wiki-count`, `data-wiki-empty`, `data-wiki-clear` | The ثورة ويكي register. The years filter it, and the search covers every year and treats أ/إ/آ, ة/ه and ى/ي as the same letter. The row under the pointer or keyboard focus shows in the preview. |
+| `data-wiki`, `data-wiki-year` + `data-wiki-total`, `data-wiki-search`, `data-wiki-preview`, `data-wiki-count`, `data-wiki-empty`, `data-wiki-clear` | The ثورة ويكي register. The years filter it, and the search covers every year and treats أ/إ/آ, ة/ه and ى/ي as the same letter. The row under the pointer or keyboard focus shows in the preview. |
 | `data-grow` | A block whose bars grow when it scrolls into view (the archive years at the home closing, the article's data band) |
 | `data-axis-fill` on an `i.axis-fill` next to the page axis, or on the timeline's `i.tl__fill` | The axis (or the spine) fills with sand to the reading position (article, خبر وتعليق) |
 | `data-count` | A figure that counts up from 0 when it comes into view. Screen readers get the final figure throughout. |
@@ -173,7 +174,7 @@ Still with the client: the designer's section artwork, photos for the 18 writers
 
 ## Laravel / Blade
 
-1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=14`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
+1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=15`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
 2. **Active nav**: add `aria-current="page"` to the current section link, e.g. `@if(request()->is('politics*')) aria-current="page" @endif`.
 3. **Story component**: `<x-story :post="$post" variant="row" />` should output:
    ```html

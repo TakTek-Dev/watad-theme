@@ -53,7 +53,7 @@
       var on = $('.tab.is-active', box);
       if (!on) return;
       var r = on.getBoundingClientRect(), p = box.getBoundingClientRect();
-      ink.style.setProperty('--w', r.width + 'px');
+      ink.style.setProperty('--wn', r.width);
       ink.style.setProperty('--x', (r.left - p.left + box.scrollLeft) + 'px');
     }
     window.addEventListener('resize', move);
@@ -687,7 +687,7 @@
   }
 
   /* 21. ثورة ويكي register (home) ------------------------------------------
-     [data-wiki] holds year links [data-wiki-year][data-count], a search box
+     [data-wiki] holds year links [data-wiki-year][data-wiki-total], a search box
      [data-wiki-search] and a table of rows tr[data-year][data-img?]. A year
      shows its rows; typing searches every year (أ/إ/آ, ة/ه and ى/ي match each
      other). The row under the pointer or focus is shown in [data-wiki-preview]:
@@ -757,7 +757,7 @@
         count.appendChild(document.createTextNode(' في كل السنوات'));
       } else if (!term) {
         var chip = chips.filter(function (c) { return c.getAttribute('data-wiki-year') === year; })[0];
-        var total = parseInt(chip.getAttribute('data-count'), 10) || shown.length;
+        var total = parseInt(chip.getAttribute('data-wiki-total'), 10) || shown.length;
         count.appendChild(el('b', '', entries(total)));
         count.appendChild(document.createTextNode(' في ' + year + (total > shown.length ? '، هذه احدثها' : '')));
         if (total > shown.length) { var all = el('a', '', 'عرض الكل'); all.href = chip.getAttribute('href'); count.appendChild(document.createTextNode(' — ')); count.appendChild(all); }
