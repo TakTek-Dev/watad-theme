@@ -264,21 +264,23 @@
     });
   }
 
-  /* 8. Article table of contents: highlight the chapter in view ---------- */
+  /* 8. Article table of contents: highlight the chapter in view ----------
+     The chapter lit is the last one whose mark has gone above a line 30%
+     down the screen. The observer's root reaches far above the screen, so
+     scrolling back up (or jumping to the top) puts marks below the line
+     again and the list follows; above the first chapter nothing is lit. */
   function toc() {
     var links = $$('[data-toc] a[href^="#"]');
     if (!links.length || !('IntersectionObserver' in window)) return;
-    var map = {};
-    links.forEach(function (a) { var el = document.getElementById(a.getAttribute('href').slice(1)); if (el) map[el.id] = a; });
+    var marks = [], passed = {};
+    links.forEach(function (a) { var el = document.getElementById(a.getAttribute('href').slice(1)); if (el) marks.push({ el: el, a: a }); });
     var io = new IntersectionObserver(function (es) {
-      es.forEach(function (e) {
-        if (e.isIntersecting) {
-          links.forEach(function (a) { a.classList.remove('is-active'); });
-          map[e.target.id] && map[e.target.id].classList.add('is-active');
-        }
-      });
-    }, { rootMargin: '-20% 0px -70% 0px' });
-    Object.keys(map).forEach(function (id) { io.observe(document.getElementById(id)); });
+      es.forEach(function (e) { passed[e.target.id] = e.isIntersecting; });
+      var on = null;
+      marks.forEach(function (m) { if (passed[m.el.id]) on = m; });
+      marks.forEach(function (m) { m.a.classList.toggle('is-active', m === on); });
+    }, { rootMargin: '100000px 0px -70% 0px' });
+    marks.forEach(function (m) { io.observe(m.el); });
   }
 
   /* 9. Follow button (demo state) ---------------------------------------- */
@@ -1330,8 +1332,43 @@
     });
   }
 
+  /* 36. Rows that scroll sideways (tabs, the header's sections) --------------------------
+     When a row is wider than the screen it fades on the side that still has
+     more (data-more="start|end", CSS 42), and on arrival its chosen item is
+     brought into view, so the current section is never the one hidden. The
+     row is watched for its own width too: when the header sticks, the logo
+     and the buttons take part of the sections row, and the current section
+     is brought back out from under them. */
+  function scrollHints() {
+    var bars = $$('.site-header__secs, .tabs');
+    if (!bars.length) return;
+    function mark(b) {
+      var max = b.scrollWidth - b.clientWidth;
+      if (max < 2) { b.removeAttribute('data-more'); return; }
+      var pos = Math.abs(b.scrollLeft), more = [];   // right to left: scrollLeft runs from 0 at the start to -max at the end
+      if (pos > 2) more.push('start');
+      if (pos < max - 2) more.push('end');
+      b.setAttribute('data-more', more.join(' '));
+    }
+    function reveal(b) {
+      var on = $('[aria-current], .is-active', b);
+      if (!on || b.scrollWidth <= b.clientWidth + 2) return;
+      var br = b.getBoundingClientRect(), r = on.getBoundingClientRect();
+      if (r.left < br.left + 32 || r.right > br.right - 32) b.scrollLeft += (r.left + r.width / 2) - (br.left + br.width / 2);
+    }
+    bars.forEach(function (b) {
+      reveal(b); mark(b);
+      b.addEventListener('scroll', function () { mark(b); }, { passive: true });
+    });
+    if ('ResizeObserver' in window) {
+      var ro = new ResizeObserver(function (es) { es.forEach(function (e) { reveal(e.target); mark(e.target); }); });
+      bars.forEach(function (b) { ro.observe(b); });
+    } else window.addEventListener('resize', function () { bars.forEach(mark); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { bars.forEach(function (b) { reveal(b); mark(b); }); });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
-    [query, stickyHeader, drawer, searchOverlay, views, facets, tabs, chips, months, toc, follow, boards, plant, images, progress, ticker, dialogs, newsModal, copyLinks, archiveNav, archiveFilter, wikiRegister, axisFill, counters, inkWords, cites, quoteShare, timeLeft, shareLinks, worksList, hits, newsDays, markParts, writersFind, arrive].forEach(function (fn) {
+    [query, stickyHeader, drawer, searchOverlay, views, facets, tabs, chips, months, toc, follow, boards, plant, images, progress, ticker, dialogs, newsModal, copyLinks, archiveNav, archiveFilter, wikiRegister, axisFill, counters, inkWords, cites, quoteShare, timeLeft, shareLinks, worksList, hits, newsDays, markParts, writersFind, scrollHints, arrive].forEach(function (fn) {
       try { fn(); } catch (err) { if (window.console) console.error(err); }   // one broken block must not take the rest down
     });
   });

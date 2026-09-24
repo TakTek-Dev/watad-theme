@@ -2,8 +2,8 @@
 
 Static front-end theme for **وتد (watad.media)**. The whole thing is plain HTML, CSS and JavaScript: no framework and no build step. It's ready to be cut into Blade views.
 
-- **Live preview:** https://imsemoo.github.io/watad-theme/
-- **All pages:** https://imsemoo.github.io/watad-theme/pages.html
+- **Live preview:** https://taktek-dev.github.io/watad-theme/
+- **All pages:** https://taktek-dev.github.io/watad-theme/pages.html
 
 ## Pages
 
@@ -43,8 +43,9 @@ assets/
 - **The axis (المحور)** is a 1px line running down the middle of the gutter between rail and body. It's drawn once per page through `.axis-layer`, and each teal `.band` draws its own sand-coloured one. Nothing sits on the line.
 - `.wedge` places one of the six brand marks centred on the axis. Put it inside `.rail`.
 - Body splits: `.split` (600/400), `.split--rev`, `.split--even`, `.cols-3`, `.cols-4`.
-- Breakpoints: **1199 / 1023 / 767**. Below 1024 the rail stacks above the body and the axis moves into the right margin.
+- Breakpoints: **1199 / 1023 / 767**. Below 1024 the rail stacks above the body and the axis is hidden: one column has no gutter for it to run down.
 - **Tablet and phone (CSS 41):** on touch screens, small text links, tabs, chips and the header sections carry an invisible hit area around them, so every target is easy to hit without the layout changing. On one column the article head reads section, title, writer, sharing, then the epigraph. Phones get a tighter vertical rhythm, and the archive's month picker keeps the whole month name on its own row. Checked at 360, 390, 768 and 1024 wide, and on a phone held sideways.
+- **One column, section by section (CSS 42, JS 36):** two rules never sit one under the other. On one column a section's label opens it without a rule of its own, a byline belongs to its item without a rule, and a bar that measures (a month, a year) is its own baseline. Nothing hides past the edge of a phone: the five section tiles, the boards, the ثورة ويكي years and the about examples all stay in view. The rows that still scroll sideways (tabs, the header's sections) fade on the side that has more and bring their chosen item into view. No vertical line runs down a phone or tablet: the axis, the news timeline's spine and marks, the ticker's divider and the side rules of notes all go. On a tablet ناس keeps its side column, the writers' "more" tile takes two places so its row is full, and the about examples stay on one row. The footer regroups as brand and follow first, then the three link groups (two columns on a phone). A long byline name keeps its line and the date goes under it.
 
 ## Design tokens (`:root`)
 
@@ -82,7 +83,7 @@ One idea runs through all of it: the wedge (وتد) is driven into the axis, and
   - **Tabs:** one sand line slides from tab to tab (category types, archive years, author works). On the category page a type filters the list in place, and the editors' pick and the section's pager step aside while it does.
   - **Archive:** a year's months step in when it is chosen, and the years band is a bar chart of the whole archive (rows on a phone); a bar opens that year in the calendar above.
   - **Search:** the words searched for are marked with a sand highlighter that sweeps in reading direction, and results glide to their new places when the view or a filter changes.
-  - **خبر وتعليق:** the timeline's spine fills with sand down to where the reader is, a post carries a card for the piece behind it, and the days sit beside it with the day being read marked.
+  - **خبر وتعليق:** the timeline's spine fills with sand down to where the reader is (wide screens), a post carries a card for the piece behind it, and the days sit beside it with the day being read marked.
   - **About:** the motto is written in from the right, the stance inks in white and sand, and pointing at a part of the mark brings it forward in the logo.
   - **404:** the outline of the missing peg is traced beside the title, then breaks into a dashed mark.
 - **Between pages:** same-origin navigation cross-fades where the browser supports cross-document view transitions.
@@ -146,7 +147,7 @@ Still with the client: the designer's section artwork, photos for the 18 writers
 | `data-result-count`, `data-filter-empty`, `data-facets-reset` | Counter, empty message, reset |
 | `data-tabs="#list"` + `data-tab="…"` / `data-tab-item="…"` | Tabs that filter a list (author page) |
 | `data-month` + `data-month-toggle` | Collapse / expand an archive month (animated height) |
-| `data-toc` | Highlights the chapter currently in view, and adds the reading-progress line to the page |
+| `data-toc` | Highlights the chapter being read (the last one whose mark has passed a line 30% down the screen; nothing above the first chapter, and it follows the reader back up), and adds the reading-progress line to the page |
 | `data-query` | Fills `?q=` into the heading and the input |
 | `data-follow` | Follow button state (demo) |
 | `data-ticker` on `.ticker` | Breaking news: the headlines take turns. On phones it shows one at a time with swipe, next and "1 من 5". |
@@ -170,11 +171,12 @@ Still with the client: the designer's section artwork, photos for the 18 writers
 | (automatic) under `data-results` | Each word of `?q=` (or the page's query) is wrapped in `mark.hit` in the result titles and deks. The server can print the same marks instead. |
 | `data-tl-days` | The day index beside the timeline: marks the day being read and glides to a day |
 | `data-part="quote\|cut"` inside `.ab-mark` | Pointing at or focusing the part brings that part forward in the logo |
+| (automatic) on `.tabs` and `.site-header__secs` | A row wider than the screen gets `data-more="start end"` for the sides that still have more, which CSS fades, and its chosen item (`aria-current` / `.is-active`) is brought into view |
 | `data-writers`, `data-writers-search`, `data-writer="name field"`, `data-writers-count`, `data-writers-empty`, `data-writers-clear` | Find a writer by name or field as you type (writers page and the home popup). أ/إ/آ, ة/ه and ى/ي match each other; the first Esc clears the field. |
 
 ## Laravel / Blade
 
-1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=15`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
+1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=17`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
 2. **Active nav**: add `aria-current="page"` to the current section link, e.g. `@if(request()->is('politics*')) aria-current="page" @endif`.
 3. **Story component**: `<x-story :post="$post" variant="row" />` should output:
    ```html

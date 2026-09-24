@@ -1790,3 +1790,161 @@ input,textarea,select{caret-color:var(--teal);accent-color:var(--teal)}
   .arcal__jump{flex-wrap:wrap}
   .arcal__jump select[name="m"]{flex:1 1 100%}
 }
+
+/* 42. One column, section by section -------------------------------------------------------
+   Two rules never sit one under the other. On one column the section's label
+   opens it without a rule of its own (the rule would land under the one
+   closing the section before), a byline belongs to its item without a rule
+   (items are divided by theirs), and a bar that measures (a month, a year)
+   is its own baseline. Nothing hides past the edge on a phone: the five
+   section tiles, the boards, the years and the examples all stay in view,
+   and a row that still scrolls (tabs, the header's sections) fades on the
+   side that has more (watad.js 36). */
+.wd-years a{border-bottom:0}
+.arcal__m,.arcal__m[aria-current="true"]{border-bottom:0;padding-bottom:12px}
+.arcal__m[aria-current="true"] .arcal__name{box-shadow:inset 0 -2px var(--sand)}   /* the chosen month is underlined in sand */
+.sources li:last-child,.note .fg:last-child,.facets .facet:last-child .facet__opt:last-child{border-bottom:0}
+.arcal__filters>div:last-of-type{border-bottom:0!important}   /* the month under it opens with its own rule */
+.s-empty{border-top:0;padding-top:0}   /* the search field's line is right above it */
+.tl-side .rail-label{border-top:0;padding-top:0}   /* the head's rule is right above it */
+.ticker + .section .rail-label{border-top:0;padding-top:0}   /* the ticker's rule opens the first section */
+.au-stats .stat{border-top:0;padding-top:0}   /* the portrait's ground line is right above them; the row closes with its own rule */
+.byline{flex-wrap:wrap;row-gap:2px}   /* a long name keeps its line and the date goes under it, not a name broken beside its date */
+.home-sec__title{display:none}   /* the poster carries its title on wide screens; a phone shows it beside the smaller poster */
+[data-more~="end"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 40px);mask-image:linear-gradient(to right,transparent,#000 40px)}   /* the end of a right-to-left row is its left edge */
+[data-more~="start"]{-webkit-mask-image:linear-gradient(to left,transparent,#000 40px);mask-image:linear-gradient(to left,transparent,#000 40px)}
+[data-more~="start"][data-more~="end"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 40px,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(to right,transparent,#000 40px,#000 calc(100% - 40px),transparent)}
+
+@media (max-width:1023px){
+  .rail-label{border-top:0;padding-top:0}
+  .byline{border-top:0;padding-top:0;margin-top:8px}
+  .wd-rec__head{border-bottom:0;padding-bottom:6px}
+  /* one column has no axis to stand on: its line would only run down the margin */
+  .axis,.axis-fill{display:none}
+  .ticker__items a{padding-inline-start:0;border-inline-start:0}   /* one headline at a time: no divider beside it */
+  /* nor the news timeline's spine and its marks: the sticky day labels and the rules between items carry the time */
+  .tl::before,.tl__fill,.tl__item::before{display:none}
+  .tl__item{padding-inline-start:0}
+  /* the article head: the writer and sharing share one row under one rule */
+  .art-head{grid-template-columns:minmax(0,1fr) auto;column-gap:0}
+  .art-head .rail-label,.art-head .art-title,.art-head .epigraph{grid-column:1/-1}
+  .art-head .art-author{grid-column:1;padding-top:12px}
+  .art-head .art-share{grid-column:2;margin-top:4px;padding-top:12px;border-top:1px solid var(--ink)}
+  .art-head .art-share__done{inset-inline-start:auto;inset-inline-end:0}   /* the buttons end the row now: the note opens inward, not past the edge */
+  /* the footer: the brand and where to follow it, then the three link groups side by side */
+  .site-footer__main{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"brand brand follow" "secs about browse";column-gap:var(--gap);row-gap:34px}
+  .site-footer__cols{display:contents}
+  .site-footer__brand{grid-area:brand}
+  .site-footer__cols>:nth-child(1){grid-area:secs}
+  .site-footer__cols>:nth-child(2){grid-area:about}
+  .site-footer__cols>:nth-child(3){grid-area:browse}
+  .site-footer__follow{grid-area:follow}
+}
+
+@media (max-width:767px){
+  .note,.margin-fig{border-inline-start:0;padding-inline-start:0}
+  /* the ثورة ويكي preview is the card above the table here, so no row is marked as the one shown */
+  .wk-table tbody tr.is-previewed td{background:none}
+  .wk-table tbody tr.is-previewed .wk-n{color:var(--sand)}
+  .wk-table tbody tr.is-previewed .wk-n::before{transform:scaleY(0)}
+  .wk-table tbody tr.is-previewed .wk-go::before{opacity:0}
+  .art-head .art-share__label{display:none}
+  /* the five section tiles, three over two */
+  .secarts{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;overflow:visible;margin-inline:0;padding:0}
+  .secarts>*{flex:0 0 calc((100% - 24px) / 3)}
+  /* the boards: the lead board beside its title, the other three side by side under them */
+  .boards{grid-template-columns:128px minmax(0,1fr);column-gap:16px;row-gap:28px;align-items:center}
+  .boards>:first-child{grid-column:1;grid-row:1;max-width:none}
+  .boards>div{display:contents}
+  .boards>div>article{grid-column:2;grid-row:1}
+  .boards__strip{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0;padding:0;overflow:visible}
+  .boards__strip>:nth-child(n){width:auto}
+  /* politics: the list first, then the board as its last row, its title beside it */
+  .home-sec>:nth-child(2){order:0}
+  .home-sec>:nth-child(3){max-width:none;display:grid;grid-template-columns:110px minmax(0,1fr);grid-template-rows:1fr auto auto auto 1fr;column-gap:16px;margin-top:-18px;padding-top:16px;border-top:1px solid var(--hair)}
+  .home-sec>:nth-child(3)>.poster{grid-row:1/-1}
+  .home-sec>:nth-child(3)>:not(.poster):not(.stretched){grid-column:2}
+  .home-sec>:nth-child(3)>div:first-of-type{grid-row:2;margin-top:0!important}
+  .home-sec__title{display:block;grid-row:3;margin-top:4px}
+  .home-sec>:nth-child(3)>.byline{grid-row:4}
+  /* build: each board beside its words, the two boards on one column line */
+  .home-build{grid-template-columns:120px minmax(0,1fr);column-gap:16px;row-gap:30px;align-items:start}
+  .home-build>:first-child{grid-column:1;max-width:none}
+  .home-build>:nth-child(2){grid-column:2}
+  .home-build>:nth-child(2) .t-l{font-size:21px}
+  .home-build>:nth-child(3){grid-column:1/-1}
+  /* the ثورة ويكي years wrap onto two lines instead of running off the edge */
+  .wk-years{display:grid;grid-template-columns:repeat(4,auto);justify-content:start;justify-items:start;column-gap:22px;row-gap:12px;overflow:visible;margin-inline:0;padding:0}   /* four years a line, in columns */
+  /* ناس: its board row puts the board on the start side, as every other board row on a phone does */
+  .story--row{grid-template-columns:var(--media) minmax(0,1fr);align-items:center}
+  .story--row .story__media{grid-column:1}
+  .story--row .story__text{grid-column:2}
+  /* writers: six tiles, then all of them as one row across */
+  .writers-row .writer--more{grid-column:1/-1;display:grid;grid-template-columns:72px minmax(0,1fr);grid-template-rows:auto auto;column-gap:14px;align-content:center}
+  .writers-row .writer--more .writer__pic{grid-row:1/span 2;width:72px;aspect-ratio:1}
+  .writers-row .writer--more .writer__plus{font-size:28px}
+  .writers-row .writer--more .writer__all{display:none}
+  .writers-row .writer--more .writer__name{margin-top:0;align-self:end}
+  .writers-row .writer--more .writer__count{align-self:start}
+  /* the related board in an article, and the three to start from on the empty search and the 404: a board beside its words */
+  .remedy .story{display:grid;grid-template-columns:110px minmax(0,1fr);column-gap:16px;align-items:center}
+  .remedy .story>.poster{width:110px;max-width:none}
+  .remedy .story>div{margin-top:0!important}
+  .posters3{display:grid;grid-template-columns:minmax(0,1fr);gap:0;overflow:visible;margin-inline:0;padding:0}
+  .posters3>.story{display:grid;grid-template-columns:96px minmax(0,1fr);grid-template-rows:1fr auto auto auto 1fr;column-gap:16px;padding:14px 0;border-top:1px solid var(--hair)}
+  .posters3>.story:first-child{border-top:0;padding-top:0}
+  .posters3>.story>.poster{grid-row:1/-1}
+  .posters3>.story>:not(.poster):not(.stretched){grid-column:2}
+  .posters3>.story>div:first-of-type{grid-row:2;margin-top:0!important}
+  .posters3>.story>.story__title{grid-row:3}
+  .posters3>.story>.byline{grid-row:4}
+  /* keep reading: the next piece's board beside its title, the other two under them */
+  .next-read{grid-template-columns:120px minmax(0,1fr);column-gap:16px;row-gap:28px;align-items:center}
+  .next-read>div{display:contents}
+  .next-read>:last-child{grid-column:1;grid-row:1;max-width:none}
+  .next-read>div>article{grid-column:2;grid-row:1}
+  .next-read .story__title.t-xl{font-size:23px}
+  .next-read__small{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;margin-top:0}
+  .next-read__small>*,.next-read__small>*+*{width:auto}
+  /* about: the four examples, two by two */
+  .ab-offer--media{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 16px;overflow:visible;margin-inline:0;padding:0}
+  .ab-offer--media>*{flex:none}
+  /* archive: a month's pictures in two columns, each whole */
+  .ar-strip{display:block;columns:2;column-gap:12px;overflow:visible;margin-inline:0;padding:0}
+  .ar-strip>*,.ar-strip>.is-cover{width:auto;margin-bottom:14px;break-inside:avoid}
+  /* the writer: the portrait beside the name, the rest under them */
+  .au-head{grid-template-columns:112px minmax(0,1fr);column-gap:16px;row-gap:0;align-items:start}
+  .au-head__text{display:contents}
+  .au-portrait{grid-row:1/span 3}
+  .au-head__text>.kicker,.au-head__text>h1,.au-head__text>div:first-of-type{grid-column:2}
+  .au-head__text>.kicker{align-self:end;padding-top:6px}
+  .au-head .au-name{font-size:36px;margin-top:6px!important}
+  .au-head__text>div:first-of-type{font-size:16.5px!important;line-height:1.5;margin-top:8px!important}
+  .au-head__text>p,.au-head__text>.flex{grid-column:1/-1}
+  /* the footer on a phone: the brand, where to follow it under one line, then the links in two columns */
+  .site-footer__main{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"brand brand" "follow follow" "secs about" "browse browse";row-gap:28px}
+  .site-footer__follow{padding-bottom:28px;border-bottom:1px solid rgba(255,255,255,.18)}
+  .site-footer__follow h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .site-footer__follow .social{margin-top:0}
+  .site-footer__col h2{margin-bottom:6px;padding-bottom:0;border-bottom:0}
+  .site-footer__cols>:nth-child(3) ul{columns:2;column-gap:var(--gap)}
+  .site-footer__cols>:nth-child(3) li{break-inside:avoid}
+}
+
+/* the tablet: ناس keeps its side column (a full-width second picture would weigh as much as the lead),
+   the four examples on من نحن stay one row (two by two they stood 620px tall), a writer's latest piece
+   gives its summary half the row, and the writers' "more" tile takes the last two places of the second
+   row, its box as tall as the portraits */
+@media (min-width:768px) and (max-width:1023px){
+  .home-people{grid-template-columns:minmax(0,1fr) 250px}
+  .ab-offer--media{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .au-latest{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:1023px){
+  .ab-hero .note{border-inline-start:0;padding-inline-start:0}   /* under the lead now, not beside it: a side rule would hang off the edge */
+}
+@media (min-width:768px) and (max-width:1199px){
+  .writers-row{container-type:inline-size}
+  .writers-row .writer--more{grid-column:span 2}
+  .writers-row .writer--more .writer__pic{aspect-ratio:auto;height:calc((100cqi - 60px) * .3125)}   /* a portrait: a quarter of the row less its gaps, at 4:5 */
+}
