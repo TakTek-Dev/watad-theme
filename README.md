@@ -1,4 +1,4 @@
-# وتد — Watad static theme
+# وتد | Watad static theme
 
 Static front-end theme for **وتد (watad.media)**. The whole thing is plain HTML, CSS and JavaScript: no framework and no build step. It's ready to be cut into Blade views.
 
@@ -28,7 +28,7 @@ Open any file directly in the browser. The only external request is Google Fonts
 
 ```
 assets/
-  css/watad.css      one stylesheet, sections numbered 1–41
+  css/watad.css      one stylesheet, sections numbered 1–43
   js/watad.js        vanilla JS, behaviour opt-in via data-attributes
   img/brand/         logo + the six identity marks (SVG)
   img/posts/         demo images (posters 9:16, covers 16:9)
@@ -46,10 +46,11 @@ assets/
 - Breakpoints: **1199 / 1023 / 767**. Below 1024 the rail stacks above the body and the axis is hidden: one column has no gutter for it to run down.
 - **Tablet and phone (CSS 41):** on touch screens, small text links, tabs, chips and the header sections carry an invisible hit area around them, so every target is easy to hit without the layout changing. On one column the article head reads section, title, writer, sharing, then the epigraph. Phones get a tighter vertical rhythm, and the archive's month picker keeps the whole month name on its own row. Checked at 360, 390, 768 and 1024 wide, and on a phone held sideways.
 - **One column, section by section (CSS 42, JS 36):** two rules never sit one under the other. On one column a section's label opens it without a rule of its own, a byline belongs to its item without a rule, and a bar that measures (a month, a year) is its own baseline. Nothing hides past the edge of a phone: the five section tiles, the boards, the ثورة ويكي years and the about examples all stay in view. The rows that still scroll sideways (tabs, the header's sections) fade on the side that has more and bring their chosen item into view. No vertical line runs down a phone or tablet: the axis, the news timeline's spine and marks, the ticker's divider and the side rules of notes all go. On a tablet ناس keeps its side column, the writers' "more" tile takes two places so its row is full, and the about examples stay on one row. The footer regroups as brand and follow first, then the three link groups (two columns on a phone). A long byline name keeps its line and the date goes under it.
+- **Every page, desktop first (CSS 43, JS 37):** the article's running text starts on the axis, as its title, chapters and figures do (`.art-body` is start-aligned). A long list keeps its label in view: add `.l--stick` to the `.l` and its rail label rides along on a wide screen (the section list, a writer's works, each archive month, the news timeline). The writers page is five to a row on a wide screen, with the letters in the rail (`[data-writers-index]`). Titles break into balanced lines and paragraphs avoid a lone last word (`text-wrap`).
 
 ## Design tokens (`:root`)
 
-`--teal #0C4D5A` · `--sand #B9A779` · `--ink #282828` · `--grey #6E6E75` · `--mid #5F5F66` · `--hair #DDE0E0` · `--paper #F2F2F2`
+`--teal #0C4D5A`, `--sand #B9A779` (`--sand-lit #C4B387` for small text on teal, 4.5:1), `--ink #282828`, `--grey #6E6E75`, `--mid #5F5F66`, `--hair #DDE0E0`, `--paper #F2F2F2`
 Fonts: `--disp` (El Messiri: headlines + UI), `--body` (Amiri: reading text).
 
 The brand grey `#818189` is used one step darker (`#6E6E75`) because dates and captions are 12px and need 4.5:1 on white and paper. For the same reason, quiet text on teal (`--on-dark-2`) is `#ABB9BB`. Sand is unchanged, so the sand index numerals (2.4:1 on white) and sand kickers on teal (4.0:1) are still below AA. That was a brand decision; if the client wants full AA, give those two a darker text-only sand.
@@ -59,6 +60,7 @@ The brand grey `#818189` is used one step darker (`#6E6E75`) because dates and c
 - **Posters (9:16) are always shown whole**: `.poster` = `aspect-ratio:9/16`, no text over them.
 - Covers (16:9) may crop: `.cover`, `.cover--wide`.
 - No تشكيل, Western digits, no letter-spacing on Arabic, no shadows, gradients or rounded corners.
+- No em dashes, en dashes or middle dots in the Arabic copy. A separator between two phrases in a label or a meta row is `<span class="sep">، </span>`: CSS draws it as a short bar in the text's colour, and it is read and copied as a comma (`سياسة، تحليل`). Page titles use `|` (`سياسة | وتد`), ranges a plain hyphen (`2003-2006`).
 - A selected item is always underlined in sand (`.tab.is-active`, `.chip.is-active`, `.facet__opt.is-active`, `aria-current="page"`). On hover, the same line is drawn in from the start edge at half strength.
 - Marks on a teal `.band` are always sand. The CSS recolours them, so a teal mark can't disappear on a band.
 
@@ -110,7 +112,7 @@ Still with the client: the designer's section artwork, photos for the 18 writers
 | Class | Use |
 |---|---|
 | `article.story` + `a.stretched` | Any clickable unit. The link covers the whole unit, so the author link inside it still works and there are no nested `<a>`. |
-| `.kicker` | القسم — النوع |
+| `.kicker` | القسم + `.sep` + النوع: `<span class="kicker">سياسة<span class="sep">، </span>تحليل</span>` |
 | `.byline` | Author (link) + `<time>` |
 | `.rail-label` | Section label in the rail (`<b>` title + note + link). Use `<h2>` in place of `<b>` when the section has no other heading. |
 | `.band` | Full-width teal section (has its own axis) |
@@ -122,6 +124,11 @@ Still with the client: the designer's section artwork, photos for the 18 writers
 | `.alist` > `article.story.aitem` | Section list item: `.aitem__thumb` (cover, poster or `--text`), `.aitem__title`, `.aitem__dek`, `.aitem__by` with `.avatar` |
 | `.tl` > `.tl__day` / `li.tl__item[data-news]#n-…` > `.post` | Timeline post. `.post__more` (hidden) holds the full text and the related link the popup shows. |
 | `.writer`, `.writer--card`, `.writer--row`, `.writer--more`, `.writers-row`, `.writers-list`, `.writers-grid` | Writers: picture tile + name + field. `.writer__pic` holds a cut-out, or is `--photo` (a photo fills it) or `--mono` (`.writer__mono`, the initial). `--row` is the compact line used in the popup. `.writers-find` is the search field. |
+| `.wr-index` (`[data-writers-index]`) | The writers page's letters: links to the first writer of each letter (`id="w-م"`). In the rail on a wide screen it rides along with the list; over the list on a tablet or a phone. |
+| `.author-strip` | The writer at the end of an article: `.author-strip__pic` (a `.writer__pic` tile), `.author-strip__who` (name, field, `.author-strip__bio`, `.author-strip__acts`) and `.author-strip__more` (her latest pieces). |
+| `.next-read` > `.next-read__small` | Keep reading: the lead board beside its title and summary, three more boards on one shelf under them (rows on a phone). |
+| `.cat-head__people` | Beside a section's title: the writers who write in it, with a link to all the writers. On خبر وتعليق the same place holds where to follow it (`.tl-follow`). |
+| `.sep` | A phrase separator in a label or a meta row (see the content rules). |
 | `.post__card`, `.post__media` | In a timeline post: the piece behind the news as a card (picture + type + title), or the post's own photo |
 | `.tl-side` > `.tl-days` | The days beside the timeline, with the count of posts in each |
 | `.ar-years` | The archive's years as a bar chart (`--h` is the year's share of the biggest) |
@@ -156,7 +163,7 @@ Still with the client: the designer's section artwork, photos for the 18 writers
 | `data-news-modal`, `data-news`, `data-news-open`, `data-news-prev/next` | The خبر وتعليق popup, filled from the post that was opened |
 | `data-copy-link="#id"` | Copies this page's address with that anchor |
 | `data-arcal`, `data-year`, `data-year-grid`, `data-key="2026-09"` on `.month` | Archive by date: switches the year and marks the month from `?y=&m=` |
-| `data-archive-filter="section\|type"` + `data-value` on the archive chips | Filters the month rows by their kicker (`سياسة — تحليل`). Also reads `?section=&type=`, which is how "كل مداخل ثورة ويكي" links in. |
+| `data-archive-filter="section\|type"` + `data-value` on the archive chips | Filters the month rows by their kicker (`سياسة، تحليل`). Also reads `?section=&type=`, which is how "كل مداخل ثورة ويكي" links in. |
 | `data-wiki`, `data-wiki-year` + `data-wiki-total`, `data-wiki-search`, `data-wiki-preview`, `data-wiki-count`, `data-wiki-empty`, `data-wiki-clear` | The ثورة ويكي register. The years filter it, and the search covers every year and treats أ/إ/آ, ة/ه and ى/ي as the same letter. The row under the pointer or keyboard focus shows in the preview. |
 | `data-grow` | A block whose bars grow when it scrolls into view (the archive years at the home closing, the article's data band) |
 | `data-axis-fill` on an `i.axis-fill` next to the page axis, or on the timeline's `i.tl__fill` | The axis (or the spine) fills with sand to the reading position (article, خبر وتعليق) |
@@ -173,16 +180,17 @@ Still with the client: the designer's section artwork, photos for the 18 writers
 | `data-part="quote\|cut"` inside `.ab-mark` | Pointing at or focusing the part brings that part forward in the logo |
 | (automatic) on `.tabs` and `.site-header__secs` | A row wider than the screen gets `data-more="start end"` for the sides that still have more, which CSS fades, and its chosen item (`aria-current` / `.is-active`) is brought into view |
 | `data-writers`, `data-writers-search`, `data-writer="name field"`, `data-writers-count`, `data-writers-empty`, `data-writers-clear` | Find a writer by name or field as you type (writers page and the home popup). أ/إ/آ, ة/ه and ى/ي match each other; the first Esc clears the field. |
+| `data-writers-index` | The letter index: a letter jumps to its first writer still shown by the search, a letter the search has emptied is set aside (also for the keyboard), and the letter being read is underlined. |
 
 ## Laravel / Blade
 
-1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=17`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
+1. **Layout**: take everything between `<!-- @partial: header -->` and `<!-- @endpartial -->` into `resources/views/partials/header.blade.php`, and do the same for the footer. `<head>` + `<main class="page">` + the axis layer become `layouts/app.blade.php`. The static pages load the assets with `?v=18`. In Blade, use a version that changes with the file, e.g. `{{ asset('assets/css/watad.css') }}?v={{ filemtime(public_path('assets/css/watad.css')) }}`.
 2. **Active nav**: add `aria-current="page"` to the current section link, e.g. `@if(request()->is('politics*')) aria-current="page" @endif`.
 3. **Story component**: `<x-story :post="$post" variant="row" />` should output:
    ```html
    <article class="story">
      <img class="{{ $post->is_poster ? 'poster' : 'cover' }}" src="…" alt="{{ $post->title }}">
-     <span class="kicker">{{ $post->section->name }} — {{ $post->type }}</span>
+     <span class="kicker">{{ $post->section->name }}<span class="sep">، </span>{{ $post->type }}</span>
      <h3 class="story__title t-s">{{ $post->title }}</h3>
      <div class="byline"><a href="{{ route('authors.show',$post->author) }}"><b>{{ $post->author->name }}</b></a><time datetime="{{ $post->published_at->toDateString() }}">…</time></div>
      <a class="stretched" href="{{ route('posts.show',$post) }}" aria-label="{{ $post->title }}"></a>

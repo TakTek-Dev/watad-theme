@@ -7,6 +7,8 @@
    ========================================================================== */
 (function () {
   'use strict';
+  // a phrase separator in a label or a meta row: drawn as a short bar, read as a comma (CSS .sep)
+  var sep = function () { var s = document.createElement('span'); s.className = 'sep'; s.textContent = '، '; return s; };
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -573,7 +575,8 @@
       body.textContent = '';
       var meta = el('p', 'nm__meta');
       meta.appendChild(el('b', '', $('.post__place', p).textContent));
-      meta.appendChild(document.createTextNode(' — ' + time.textContent + '، ' + dayOf(p)));
+      meta.appendChild(sep());
+      meta.appendChild(document.createTextNode(time.textContent + '، ' + dayOf(p)));
       var h = el('h2', 'nm__news', $('.post__news', p).textContent); h.id = 'nm-title';
       var text = el('div', 'nm__text');
       if (more) $$('p', more).forEach(function (x) { text.appendChild(x.cloneNode(true)); });
@@ -718,7 +721,8 @@
       c.appendChild(el('b', 'wk-card__n', d.n));
       c.appendChild(el('span', 'wk-card__type', d.type));
       c.appendChild(el('span', 'wk-card__title', d.title));
-      c.appendChild(el('span', 'wk-card__by', d.author + ' — ' + d.year));
+      var by = el('span', 'wk-card__by', d.author); by.appendChild(sep()); by.appendChild(document.createTextNode(d.year));
+      c.appendChild(by);
       c.insertAdjacentHTML('beforeend', '<svg class="wk-card__mark" viewBox="0 0 52.46 69.13" aria-hidden="true"><path d="M36.7,0C16.43,0,0,16.43,0,36.7v15.35h34.97s0,17.08,0,17.08c11.35-15.37,17.49-26.96,17.49-46.08V0h-15.76ZM34.97,34.97h-17.49c0-9.66,7.83-17.49,17.49-17.49v17.49Z"/></svg>');
       return c;
     }
@@ -736,9 +740,9 @@
         var im = el('img', 'poster'); im.alt = ''; im.width = 540; im.height = 960; im.src = img;
         frame.appendChild(im);
       } else frame.appendChild(card(d));
-      meta.children[0].textContent = 'المدخل ' + d.n + ' — ' + d.type;
+      meta.children[0].textContent = 'المدخل ' + d.n; meta.children[0].appendChild(sep()); meta.children[0].appendChild(document.createTextNode(d.type));
       meta.children[1].textContent = d.title;
-      meta.children[2].textContent = d.author + ' · ' + d.year;
+      meta.children[2].textContent = d.author; meta.children[2].appendChild(sep()); meta.children[2].appendChild(document.createTextNode(d.year));
       if (!reduced.matches) { pv.classList.remove('is-swap'); void pv.offsetWidth; pv.classList.add('is-swap'); }
     }
     function apply(animate) {
@@ -762,7 +766,7 @@
         var total = parseInt(chip.getAttribute('data-wiki-total'), 10) || shown.length;
         count.appendChild(el('b', '', entries(total)));
         count.appendChild(document.createTextNode(' في ' + year + (total > shown.length ? '، هذه احدثها' : '')));
-        if (total > shown.length) { var all = el('a', '', 'عرض الكل'); all.href = chip.getAttribute('href'); count.appendChild(document.createTextNode(' — ')); count.appendChild(all); }
+        if (total > shown.length) { var all = el('a', '', 'عرض الكل'); all.href = chip.getAttribute('href'); count.appendChild(document.createTextNode('، ')); count.appendChild(all); }
       }
       if (empty) { empty.hidden = shown.length !== 0; $('[data-wiki-q]', empty).textContent = q.trim(); }
       if (animate && !reduced.matches) shown.slice(0, 8).forEach(function (r, i) {
@@ -793,7 +797,7 @@
 
   /* 22. Archive: filter by section and type (demo) --------------------------
      The القسم / النوع chips ([data-archive-filter] > [data-value]) filter the
-     month rows by their kicker ("سياسة — تحليل"), and ?section= / ?type=
+     month rows by their kicker ("سياسة، تحليل"), and ?section= / ?type=
      arrive from links such as "كل مداخل ثورة ويكي". With real data, send the
      same parameters to the server instead. */
   function archiveFilter() {
@@ -801,7 +805,7 @@
     if (!groups.length) return;
     var rows = $$('.month .arow'), state = {}, params = new URL(location.href).searchParams;
     rows.forEach(function (r) {
-      var k = $('.kicker', r), parts = k ? k.textContent.split('—') : [];
+      var k = $('.kicker', r), parts = k ? k.textContent.split('،') : [];
       r.setAttribute('data-section', (parts[0] || '').trim());
       r.setAttribute('data-type', (parts[1] || '').trim());
     });
@@ -840,7 +844,7 @@
       if (any) {
         note.textContent = '';
         var b = document.createElement('b');
-        b.textContent = [state.section, state.type].filter(Boolean).join(' — ');
+        b.textContent = [state.section, state.type].filter(Boolean).join('، ');
         note.appendChild(b);
         note.appendChild(document.createTextNode('، ' + total + (total === 1 ? ' مادة' : total === 2 ? ' مادتان' : total <= 10 ? ' مواد' : ' مادة') + ' في الشهور المعروضة. '));
         var clear = document.createElement('button');
@@ -1042,10 +1046,10 @@
       if (!b) return;
       var quote = '«' + text + '»', url = location.href.split('#')[0];
       if (b.getAttribute('data-q') === 'x') {
-        window.open('https://x.com/intent/post?text=' + encodeURIComponent(quote + ' — ' + title) + '&url=' + encodeURIComponent(url), '_blank', 'noopener');
+        window.open('https://x.com/intent/post?text=' + encodeURIComponent(quote + '\n' + title) + '&url=' + encodeURIComponent(url), '_blank', 'noopener');
         bar.hidden = true;
       } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(quote + '\n— ' + title + '، وتد\n' + url).then(function () {
+        navigator.clipboard.writeText(quote + '\n' + title + '، وتد\n' + url).then(function () {
           var s = $('span', b); s.textContent = 'تم النسخ';
           setTimeout(function () { s.textContent = 'انسخ الاقتباس'; bar.hidden = true; }, 1200);
         }, function () {});
@@ -1321,6 +1325,7 @@
         if (count) count.textContent = q ? label(n) + ' من ' + cards.length : label(n);
         if (empty) empty.hidden = n !== 0;
         reveal(back);
+        root.dispatchEvent(new CustomEvent('writers:filter'));   // the letter index follows (37)
       }
       input.addEventListener('input', apply);
       input.addEventListener('keydown', function (e) {
@@ -1367,8 +1372,63 @@
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { bars.forEach(function (b) { reveal(b); mark(b); }); });
   }
 
+  /* 37. Writers by letter: the index in the rail ([data-writers-index]) ------------------
+     Its links point at the first writer of each letter. A letter jumps to its
+     first writer still shown by the search, a letter with none is set aside,
+     and the letter being read is underlined, as every chosen item is. */
+  function writersIndex() {
+    var nav = $('[data-writers-index]');
+    if (!nav) return;
+    var root = nav.closest('[data-writers]') || document;
+    var cards = $$('[data-writer]', root), links = $$('a[href^="#w-"]', nav);
+    var FOLD = { 'أ': 'ا', 'إ': 'ا', 'آ': 'ا' };
+    var letterOf = function (c) {
+      var name = ($('.writer__name', c) || c).textContent.trim().replace(/^(د|أ)\.\s*/, '');
+      return FOLD[name.charAt(0)] || name.charAt(0);
+    };
+    var byLetter = {};
+    cards.forEach(function (c) { var l = letterOf(c); (byLetter[l] = byLetter[l] || []).push(c); });
+    var linkOf = {};
+    links.forEach(function (a) { linkOf[decodeURIComponent(a.hash.slice(1)).replace(/^w-/, '')] = a; });
+    var shown = function (c) { return c.getAttribute('data-hidden') !== 'true'; };
+    function states() {
+      Object.keys(linkOf).forEach(function (l) {
+        var any = (byLetter[l] || []).some(shown);
+        if (any) { linkOf[l].removeAttribute('aria-disabled'); linkOf[l].removeAttribute('tabindex'); }
+        else { linkOf[l].setAttribute('aria-disabled', 'true'); linkOf[l].tabIndex = -1; }   // set aside for the keyboard too
+      });
+    }
+    root.addEventListener('writers:filter', function () { states(); mark(); });
+    links.forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        var l = decodeURIComponent(a.hash.slice(1)).replace(/^w-/, '');
+        var first = (byLetter[l] || []).filter(shown)[0];
+        e.preventDefault();
+        if (!first) return;
+        first.scrollIntoView({ behavior: reduced.matches ? 'auto' : 'smooth', block: 'start' });
+        var go = $('.stretched', first);
+        if (go) go.focus({ preventScroll: true });
+      });
+    });
+    // the letter being read: the last writer whose tile has passed a line a third down the screen
+    var passed = {};
+    function mark() {
+      var on = null;
+      cards.forEach(function (c, i) { if (passed[i] && shown(c)) on = letterOf(c); });
+      links.forEach(function (a) { a.classList.toggle('is-active', !!on && a === linkOf[on]); });
+    }
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { passed[cards.indexOf(e.target)] = e.isIntersecting; });
+        mark();
+      }, { rootMargin: '100000px 0px -66% 0px' });
+      cards.forEach(function (c) { io.observe(c); });
+    }
+    states();
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
-    [query, stickyHeader, drawer, searchOverlay, views, facets, tabs, chips, months, toc, follow, boards, plant, images, progress, ticker, dialogs, newsModal, copyLinks, archiveNav, archiveFilter, wikiRegister, axisFill, counters, inkWords, cites, quoteShare, timeLeft, shareLinks, worksList, hits, newsDays, markParts, writersFind, scrollHints, arrive].forEach(function (fn) {
+    [query, stickyHeader, drawer, searchOverlay, views, facets, tabs, chips, months, toc, follow, boards, plant, images, progress, ticker, dialogs, newsModal, copyLinks, archiveNav, archiveFilter, wikiRegister, axisFill, counters, inkWords, cites, quoteShare, timeLeft, shareLinks, worksList, hits, newsDays, markParts, writersFind, writersIndex, scrollHints, arrive].forEach(function (fn) {
       try { fn(); } catch (err) { if (window.console) console.error(err); }   // one broken block must not take the rest down
     });
   });

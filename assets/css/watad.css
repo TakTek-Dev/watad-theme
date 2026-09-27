@@ -10,6 +10,7 @@
 :root{
   --teal:#0C4D5A;          /* brand primary */
   --sand:#B9A779;          /* brand accent — selection, index numerals, marks on dark */
+  --sand-lit:#C4B387;      /* sand for small text on teal: the brand sand lifted to 4.5:1 there (marks keep --sand) */
   --ink:#282828;           /* body text on white */
   --grey:#6E6E75;          /* brand grey (#818189) darkened to 4.5:1 on white and paper — dates, quiet notes */
   --mid:#5F5F66;           /* secondary text */
@@ -508,7 +509,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .art-author a:hover{color:var(--teal)}
 .toc{position:sticky;top:calc(var(--stick-h) + 20px)}
 .intro-first{font-family:var(--body);font-size:clamp(19px,1.9vw,23px);line-height:1.85;margin-bottom:28px}
-.art-body{max-width:880px;margin-inline-start:auto}
+.art-body{max-width:880px}   /* starts on the axis, like the title, the chapters and the figures */
 .lede-col{max-width:700px}
 .margin-fig{border-inline-start:1px solid var(--hair);padding-inline-start:26px;margin-top:96px}
 .margin-fig b{display:block;font-size:40px;font-weight:600;line-height:1}
@@ -523,15 +524,32 @@ button{font:inherit;color:inherit;cursor:pointer}
 .closing{border-top:2px solid var(--ink);padding-top:30px;margin-top:40px}
 .closing p{font-family:var(--body);font-size:clamp(22px,2.4vw,33px);line-height:1.8;max-width:1000px}
 .sources-box{background:var(--paper);padding:30px 40px 26px}
-.author-strip{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--gap);align-items:end;border-top:1px solid var(--ink);padding-top:16px}
+.author-strip{display:grid;grid-template-columns:120px minmax(0,1fr) minmax(0,1fr);column-gap:var(--gap);row-gap:28px;align-items:start;border-top:1px solid var(--ink);padding-top:22px}
+.author-strip__pic{width:120px}
+.author-strip__name{display:block;margin-top:6px;font-size:26px;font-weight:700;line-height:1.3;transition:color .2s}
+.author-strip__name:hover{color:var(--teal)}
+.author-strip__bio{margin-top:10px;max-width:460px;font-family:var(--body);font-size:16.5px;line-height:1.8;color:#3A3A40}
+.author-strip__acts{display:flex;align-items:center;flex-wrap:wrap;gap:14px 24px;margin-top:16px}
+.author-strip__more ol{margin:6px 0 0;padding:0;list-style:none}
+.author-strip__more li a{display:grid;grid-template-columns:76px minmax(0,1fr);column-gap:14px;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--hair)}
+.author-strip__more time{font-size:12px;color:var(--grey);white-space:nowrap}
+.author-strip__more b{font-size:15.5px;font-weight:600;line-height:1.5;transition:color .2s}
+.author-strip__more li a:hover b{color:var(--teal)}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  .author-strip__pic:hover img,.author-strip:has(.author-strip__name:hover) .author-strip__pic img{transform:translateY(-6px)}
+  .author-strip__pic:hover,.author-strip:has(.author-strip__name:hover) .author-strip__pic{background-position:50% 112%}
+}
 .next-read{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--gap);align-items:end}
-.next-read__small{display:flex;gap:30px;align-items:flex-end;margin-top:30px}
-.next-read__small>*{width:200px}.next-read__small>*+*{width:150px}
+.next-read__small{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:30px;align-items:start;margin-top:32px}
 @media (max-width:1023px){
   .remedy{grid-template-columns:minmax(0,1fr) 260px}
   .remedy>.rail{grid-column:1/-1}
   .toc{position:static}
   .next-read{grid-template-columns:1fr 240px}
+  .next-read__small{gap:20px}
+  .author-strip{grid-template-columns:104px minmax(0,1fr)}
+  .author-strip__pic{width:104px}
+  .author-strip__more{grid-column:1/-1}
 }
 @media (max-width:767px){
   .epigraph{gap:14px;margin-top:22px;padding-top:18px}
@@ -540,10 +558,8 @@ button{font:inherit;color:inherit;cursor:pointer}
   .break-grid{margin-bottom:16px}
   .margin-fig{margin-top:8px;margin-bottom:24px}
   .sources-box{padding:20px 18px}
-  .author-strip{grid-template-columns:1fr}
   .remedy .poster{max-width:220px}
   .next-read>:last-child{max-width:240px}
-  .next-read__small{gap:16px}.next-read__small>*{width:150px}.next-read__small>*+*{width:120px}
 }
 
 /* 13. Category ------------------------------------------------------------- */
@@ -1749,9 +1765,9 @@ input,textarea,select{caret-color:var(--teal);accent-color:var(--teal)}
 .secart__sub{font-size:max(11px,11cqi)}
 
 @media (pointer:coarse){
-  .byline a,.aitem__by a,.crumbs a,.rail-label a,.art-author a,.link-quiet,.link-accent,.chip,.tab,.viewbtn,.site-header__secs a,.cite a{position:relative}   /* not the ثورة ويكي titles: their ::after already makes the whole row the link */
+  .byline a,.aitem__by a,.crumbs a,.rail-label a,.art-author a,.link-quiet,.link-accent,.chip,.tab,.viewbtn,.site-header__secs a,.cite a,.cat-head__label a,.author-strip__more li a{position:relative}   /* not the ثورة ويكي titles: their ::after already makes the whole row the link */
   .byline a::before,.aitem__by a::before,.crumbs a::before,.rail-label a::before,.art-author a::before,.link-quiet::before,.link-accent::before,
-  .chip::before,.tab::before,.viewbtn::before,.site-header__secs a::before,.cite a::before{content:"";position:absolute;inset:-10px -6px}
+  .chip::before,.tab::before,.viewbtn::before,.site-header__secs a::before,.cite a::before,.cat-head__label a::before{content:"";position:absolute;inset:-10px -6px}
   .crumbs a::before{inset:-3px -8px}   /* stacked a line apart: they must not reach into each other */
   .ar-years a{padding-block:5px}
   .site-footer__col li a{min-width:44px}   /* a one-word link in a column: wide enough to hit */
@@ -1904,8 +1920,14 @@ input,textarea,select{caret-color:var(--teal);accent-color:var(--teal)}
   .next-read>:last-child{grid-column:1;grid-row:1;max-width:none}
   .next-read>div>article{grid-column:2;grid-row:1}
   .next-read .story__title.t-xl{font-size:23px}
-  .next-read__small{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;margin-top:0}
-  .next-read__small>*,.next-read__small>*+*{width:auto}
+  .next-read .story__dek{display:none}   /* beside a 120px board the title is enough */
+  .next-read__small{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:minmax(0,1fr);gap:0;margin-top:0}
+  .next-read__small>.story{display:grid;grid-template-columns:84px minmax(0,1fr);grid-template-rows:1fr auto auto auto 1fr;column-gap:16px;padding:14px 0;border-top:1px solid rgba(255,255,255,.18)}
+  .next-read__small>.story>.poster{grid-row:1/-1}
+  .next-read__small>.story>:not(.poster):not(.stretched){grid-column:2}
+  .next-read__small>.story>div:first-of-type{grid-row:2;margin-top:0!important}
+  .next-read__small>.story>.story__title{grid-row:3}
+  .next-read__small>.story>.byline{grid-row:4}
   /* about: the four examples, two by two */
   .ab-offer--media{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 16px;overflow:visible;margin-inline:0;padding:0}
   .ab-offer--media>*{flex:none}
@@ -1948,3 +1970,107 @@ input,textarea,select{caret-color:var(--teal);accent-color:var(--teal)}
   .writers-row .writer--more{grid-column:span 2}
   .writers-row .writer--more .writer__pic{aspect-ratio:auto;height:calc((100cqi - 60px) * .3125)}   /* a portrait: a quarter of the row less its gaps, at 4:5 */
 }
+
+/* 43. Every page, desktop first ------------------------------------------------------------
+   The article's running text starts on the axis, as its title, chapters and
+   figures do. At its end the writer's strip shows her portrait, who she is and
+   more of her writing, and the next read fills its shelf: the lead board beside
+   its title and summary, three more boards under them. */
+@media (min-width:1024px) and (max-width:1199px){   /* a tablet and a phone keep their own layouts (12, 42) */
+  .next-read{grid-template-columns:minmax(0,1fr) 300px}
+  .next-read__small{gap:20px}
+}
+@media (max-width:767px){
+  /* the writer: the portrait beside the name, the rest under them */
+  .author-strip{grid-template-columns:88px minmax(0,1fr);column-gap:16px;row-gap:0;padding-top:18px}
+  .author-strip__pic{width:88px;grid-row:1/span 3}
+  .author-strip__who{display:contents}
+  .author-strip__who>.kicker,.author-strip__name,.author-strip__who>.meta{grid-column:2}
+  .author-strip__who>.kicker{align-self:end}
+  .author-strip__name{font-size:23px}
+  .author-strip__who>.meta{align-self:start}
+  .author-strip__bio,.author-strip__acts,.author-strip__more{grid-column:1/-1}
+  .author-strip__bio{margin-top:14px;font-size:16px}
+  .author-strip__more{margin-top:26px}
+}
+/* the head of a section: beside its title, the people who write in it; the head of
+   خبر وتعليق: where to follow it (it was at the foot of the day index, which a tablet
+   or a phone never shows) */
+.cat-head__row{grid-template-columns:168px minmax(0,1fr) 290px}
+.cat-head__people,.cat-head .tl-follow{align-self:end}
+.cat-head .tl-follow{margin:0}
+.cat-head__label{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-bottom:6px;border-bottom:1px solid var(--hair);font-size:12px;font-weight:600;color:var(--mid)}
+.cat-head__label a{color:var(--teal);font-weight:500}
+.cat-head__label a:hover{color:var(--ink)}
+.cat-head__people ul{margin:0;padding:0;list-style:none}
+.cat-head__people li a{display:grid;grid-template-columns:36px minmax(0,1fr);grid-template-rows:auto auto;column-gap:12px;align-content:center;padding:6px 0}
+.cat-head__people li+li a{border-top:1px solid var(--hair)}
+.cat-head__people .writer__pic{grid-row:1/span 2;width:36px;border-bottom-width:2px}
+.cat-head__people b{align-self:end;font-size:14.5px;font-weight:700;line-height:1.35;transition:color .2s}
+.cat-head__people small{align-self:start;overflow:hidden;font-size:11.5px;line-height:1.5;color:var(--grey);white-space:nowrap;text-overflow:ellipsis}
+.cat-head__people li a:hover b{color:var(--teal)}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  .cat-head__people li a:hover .writer__pic img{transform:translateY(-3px)}
+}
+@media (max-width:1199px){
+  .cat-head__row{grid-template-columns:168px minmax(0,1fr) 250px}
+}
+@media (max-width:1023px){
+  .cat-head__row{grid-template-columns:168px minmax(0,1fr)}
+  .cat-head__people,.cat-head .tl-follow{grid-column:1/-1}
+  .cat-head__people ul{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:var(--gap)}
+  .cat-head__people li+li a{border-top:0}
+  .cat-head .tl-follow{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:20px;align-items:center}
+  .cat-head .tl-follow .social{grid-column:2;grid-row:1/span 2;margin-top:0}
+}
+@media (max-width:767px){
+  .cat-head__row{grid-template-columns:104px minmax(0,1fr)}
+  .cat-head__people ul{column-gap:12px}
+  .cat-head__people li a{display:block;padding:10px 0 0}
+  .cat-head__people .writer__pic{width:48px}
+  .cat-head__people b{display:block;margin-top:8px;font-size:13px}
+  .cat-head__people small{display:none}
+}
+/* the writers: five to a row on a wide screen, and beside them the letters, riding
+   along the rail while the list scrolls (watad.js 37); the letter being read is
+   underlined in sand, a letter the search has emptied is set aside */
+.wr-index{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:22px;border-top:1px solid var(--hair)}
+.wr-index a{position:relative;display:grid;place-items:center;height:38px;border-bottom:1px solid var(--hair);font-family:var(--disp);font-size:17px;font-weight:600;color:var(--teal);transition:color .2s}
+.wr-index a::after{content:"";position:absolute;inset-inline:9px;bottom:-1px;height:2px;background:var(--sand);transform:scaleX(0);transition:transform .35s var(--ease-out)}
+.wr-index a:hover{color:var(--ink)}
+.wr-index a:hover::after{transform:scaleX(.5)}
+.wr-index a.is-active{color:var(--ink)}
+.wr-index a.is-active::after{transform:none}
+.wr-index a[aria-disabled="true"]{color:var(--grey);opacity:.4;pointer-events:none}
+[data-writers] .writer{scroll-margin-top:calc(var(--stick-h) + 24px)}
+@media (min-width:1024px){
+  .l[data-writers]>.rail{align-self:stretch}
+  .wr-rail{position:sticky;top:calc(var(--stick-h) + 24px)}
+}
+@media (min-width:1200px){
+  [data-writers] .writers-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:40px 24px}
+}
+@media (max-width:1023px){
+  /* over the list: the letters in one line */
+  .wr-index{grid-template-columns:repeat(auto-fit,minmax(34px,1fr));margin-top:14px;border-top:0}   /* one line on a tablet, two even lines on a phone */
+  .wr-index a{height:36px}
+}
+/* a long list keeps its label in view: the rail's label rides along beside it
+   (the section's list, a writer's works, an archive month, the news timeline) */
+@media (min-width:1024px){
+  .l--stick>.rail{align-self:stretch}
+  .l--stick>.rail>.rail-label{position:sticky;top:calc(var(--stick-h) + 24px)}
+}
+/* a phrase separator in a label or a meta row (سياسة، تحليل): drawn as a short bar
+   in the colour of its text, read and copied as a comma */
+.sep.sep{display:inline-block;flex:none;align-self:center;width:12px;height:1px;margin:0 7px;padding:0;border:0;overflow:hidden;background:currentColor;opacity:.55;font-size:0;line-height:0;vertical-align:middle}   /* doubled: a label's own "span" rules (.tl__day span, .stat span) must not restyle it */
+.arcal__m.is-empty .arcal__n::before{content:"";display:block;width:14px;height:2px;margin-top:.55em;background:currentColor}   /* a month still to come has no count */
+.xpost__meta .sep.sep{margin:0 2px}   /* the row's own gap spaces it */
+/* titles break into even lines (never one word left alone on the last), paragraphs
+   avoid a lone last word; neither changes how many lines a title takes */
+h1,h2,h3,.story__title,.t-mega,.t-xl,.t-l,.t-m{text-wrap:balance}
+.dek,.prose p,.story__dek,.aitem__dek,.work__dek,.author-strip__bio,.nitem__comment,.post__comment p,.cat-head__desc{text-wrap:pretty}
+.author-strip__more time,.cat-head__info .meta{font-variant-numeric:tabular-nums}
+/* small sand text on teal reads at 4.5:1: labels, fields, the current section, hovers */
+.band .kicker,.band .writer__field,.band .nitem__where,.site-footer__col h2,.site-header__secs a[aria-current="page"],.site-header__tools a[aria-current="page"],
+.band .byline a:hover b,.band .rail-label a:hover,.band .writer:hover .writer__name,.band .story:hover .story__title,.band .cap .u-sand{color:var(--sand-lit)}
